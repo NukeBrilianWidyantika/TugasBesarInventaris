@@ -19,7 +19,7 @@ public class IO extends Super {
 	    super.setfile(nama_ruang, lokasi_ruang, fakultas);
 	    }*/
 	    
-	    public void input_kondisi_ruang_kelas(int panjang_ruang, int lebar_ruang, int jumlah_kursi, int pintu, int jendela) {
+	   public void input_kondisi_ruang_kelas(int panjang_ruang, int lebar_ruang, int jumlah_kursi, int pintu, int jendela) {
 	    	System.out.println('\n'+"-------------------- KONDISI RUANG KELAS ---------------------"+'\n');
 	    	System.out.print("Masukkan panjang ruang         : ");
 			panjang_ruang = in.nextInt();
@@ -33,7 +33,7 @@ public class IO extends Super {
 			jendela = in.nextInt();
 		}
 	    @Override
-	    void setfile(int panjang_ruang, int lebar_ruang, int jumlah_kursi, int pintu, int jendela){
+	    void setfile(double panjang_ruang, double lebar_ruang, int jumlah_kursi, int pintu, int jendela){
 	        setfile(panjang_ruang, lebar_ruang, jumlah_kursi, pintu, jendela);
 	    }
 	    

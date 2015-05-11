@@ -243,11 +243,11 @@ public abstract class Model {
 		this.fakultas = fakultas;
 	}
 
-	public void setPanjang_ruang(int panjang_ruang) {
+	public void setPanjang_ruang(double panjang_ruang) {
 		this.panjang_ruang = panjang_ruang;
 	}
 
-	public void setLebar_ruang(int lebar_ruang) {
+	public void setLebar_ruang(double lebar_ruang) {
 		this.lebar_ruang = lebar_ruang;
 	}
 
@@ -417,7 +417,7 @@ public abstract class Model {
 		this.fakultas = fakultas;
 	}*/
 
-	void setfile(int panjang_ruang, int lebar_ruang, int jumlah_kursi,
+	void setfile(double panjang_ruang, double lebar_ruang, int jumlah_kursi,
 			int pintu, int jendela) {
 		this.panjang_ruang = panjang_ruang;
 		this.lebar_ruang = lebar_ruang;
