@@ -410,6 +410,13 @@ public abstract class Model {
 	public void setBahaya(String bahaya) {
 		this.bahaya = bahaya;
 	}
+	public int getJumlah_kunci() {
+		return jumlah_kunci;
+	}
+
+	public void setJumlah_kunci(int jumlah_kunci) {
+		this.jumlah_kunci = jumlah_kunci;
+	}
 	
 	/*void setfile(String nama_ruang, String lokasi_ruang, String fakultas) {
 		this.nama_ruang = nama_ruang;
@@ -417,8 +424,7 @@ public abstract class Model {
 		this.fakultas = fakultas;
 	}*/
 
-	void setfile(double panjang_ruang, double lebar_ruang, int jumlah_kursi,
-			int pintu, int jendela) {
+	void Model(double panjang_ruang, double lebar_ruang, int jumlah_kursi, int pintu, int jendela) {
 		this.panjang_ruang = panjang_ruang;
 		this.lebar_ruang = lebar_ruang;
 		this.jml_kursi = jumlah_kursi;
@@ -426,7 +432,7 @@ public abstract class Model {
 		this.jml_jendela = jendela;
 	}
 
-	void setfile(int jumlah_steker, String kondisi_steker,
+	void Model(int jumlah_steker, String kondisi_steker,
 			String posisi_steker, int jumlah_kabel_LCD,
 			String kondisi_kabel_LCD, String posisi_kabel_LCD,
 			int jumlah_lampu, String kondisi_lampu, String posisi_lampu,
@@ -458,7 +464,7 @@ public abstract class Model {
 		this.posisi_CCTV = posisi_CCTV;
 	}
 
-	void setfile(String kondisi_lantai, String kondisi_dinding,
+	void Model(String kondisi_lantai, String kondisi_dinding,
 			String kondisi_atap, String kondisi_pintu, String kondisi_jendela) {
 		this.kondisi_lantai = kondisi_lantai;
 		this.kondisi_dinding = kondisi_dinding;
@@ -467,7 +473,7 @@ public abstract class Model {
 		this.kondisi_jendela = kondisi_jendela;
 	}
 
-	void setfile(String sirkulasi_udara, int pencahayaan, int kelembapan,
+	void Model(String sirkulasi_udara, int pencahayaan, int kelembapan,
 			int suhu) {
 		this.sirkulasi_udara = sirkulasi_udara;
 		this.nilai_pencahayaan = pencahayaan;
@@ -475,7 +481,7 @@ public abstract class Model {
 		this.suhu = suhu;
 	}
 
-	void setfile(int kebisingan, String bau, String kebocoran,
+	void Model(int kebisingan, String bau, String kebocoran,
 			String kerusakan, String keausan) {
 		this.kebisingan = kebisingan;
 		this.bau = bau;
@@ -484,7 +490,7 @@ public abstract class Model {
 		this.keausan = keausan;
 	}
 
-	void setfile(String kekokohan, int jumlah_kunci, int jumlah_jendela, String bahaya) {
+	void Model(String kekokohan, int jumlah_kunci, int jumlah_jendela, String bahaya) {
 		this.kekokohan = kekokohan;
 		this.jumlah_kunci = jumlah_kunci;
 		this.jml_jendela = jumlah_jendela;
@@ -494,11 +500,5 @@ public abstract class Model {
 	public Model() {
 	}
 
-	public int getJumlah_kunci() {
-		return jumlah_kunci;
-	}
-
-	public void setJumlah_kunci(int jumlah_kunci) {
-		this.jumlah_kunci = jumlah_kunci;
-	}
+	
 }

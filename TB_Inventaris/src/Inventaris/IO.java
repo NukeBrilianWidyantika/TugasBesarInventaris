@@ -7,34 +7,32 @@ import javax.swing.JOptionPane;
 public class IO extends Super {
 	    Scanner in = new Scanner(System.in);
 	    Model call1;
-	    Control z;
+	    Control call2;
 	    int a,b, steker=0, LCD=0, lampu=0, kipas= 0, AC=0, CCTV=0;
 	    
-	    public void input_identitas(){
-	    	identitas();
-	    }
-	   
-	   /*@Override
-	    void setfile (String nama_ruang, String lokasi_ruang, String fakultas){
-	    super.setfile(nama_ruang, lokasi_ruang, fakultas);
-	    }*/
-	    
-	   public void input_kondisi_ruang_kelas(int panjang_ruang, int lebar_ruang, int jumlah_kursi, int pintu, int jendela) {
-	    	System.out.println('\n'+"-------------------- KONDISI RUANG KELAS ---------------------"+'\n');
-	    	System.out.print("Masukkan panjang ruang         : ");
-			panjang_ruang = in.nextInt();
-			System.out.print("Masukkan lebar ruang           : ");
-			lebar_ruang = in.nextInt();
-			System.out.print("Masukkan jumlah kursi          : ");
-			jumlah_kursi = in.nextInt();
-			System.out.print("Masukkan jumlah pintu          : ");
-			pintu = in.nextInt();
-			System.out.print("Masukkan jumlah jendela        : ");
-			jendela = in.nextInt();
-		}
 	    @Override
-	    void setfile(double panjang_ruang, double lebar_ruang, int jumlah_kursi, int pintu, int jendela){
-	        setfile(panjang_ruang, lebar_ruang, jumlah_kursi, pintu, jendela);
+	    void identitas(){
+			System.out.println('\n'+"------------------- IDENTITAS RUANG KELAS --------------------"+'\n');
+			System.out.print("Masukkan nama ruang            : ");
+			setNama_ruang(in.next());
+			System.out.print("Masukkan lokasi ruang          : ");
+			setLokasi_ruang(in.next());
+			System.out.print("Masukkan fakultas              : ");
+			setFakultas(in.next());
+		}
+	    
+	    public void input_kondisi_ruang_kelas(double panjang_ruang, double lebar_ruang, int jumlah_kursi,int pintu, int jendela){
+	    System.out.println('\n'+"-------------------- KONDISI RUANG KELAS ---------------------"+'\n');
+		System.out.print("Masukkan panjang ruang         : ");
+		setPanjang_ruang(in.nextDouble());
+		System.out.print("Masukkan lebar ruang           : ");
+		setLebar_ruang(in.nextDouble());
+		System.out.print("Masukkan jumlah kursi          : ");
+		setJml_kursi(in.nextInt());
+		System.out.print("Masukkan jumlah pintu          : ");
+		setJml_pintu(in.nextInt());
+		System.out.print("Masukkan jumlah jendela        : ");
+		setJml_jendela(in.nextInt());
 	    }
 	    
 	    
@@ -138,12 +136,12 @@ public class IO extends Super {
 			System.out.print("Pilih posisi CCTV          [ketik huruf] : ");
 			posisi_CCTV = in.next(); 
 	    }
-	    void setfile(int jumlah_steker, String kondisi_steker, String posisi_steker, int jumlah_kabel_LCD, 
+	   /* void setfile(int jumlah_steker, String kondisi_steker, String posisi_steker, int jumlah_kabel_LCD, 
 	            String kondisi_kabel_LCD, String posisi_kabel_LCD, int jumlah_lampu,String kondisi_lampu ,
 	            String posisi_lampu, int jumlah_kipas_angin, String kondisi_kipas_angin, String posisi_kipas_angin,
 	            int jumlah_AC, String kondisi_AC,String posisi_AC,String SSID, String bandwidth, int jumlah_CCTV, String kondisi_CCTV, String posisi_CCTV){
 	        setfile(jumlah_steker, kondisi_steker, posisi_steker, jumlah_kabel_LCD, kondisi_kabel_LCD, posisi_kabel_LCD, jumlah_lampu, kondisi_lampu, posisi_lampu, jumlah_kipas_angin, kondisi_kipas_angin, posisi_kipas_angin, jumlah_AC, kondisi_AC, posisi_AC, SSID, bandwidth, jumlah_CCTV, kondisi_CCTV, posisi_CCTV);
-	    }
+	    }*/
 	    
 	    
 	    public void input_lingkungan_ruang_kelas(String kondisi_lantai, String kondisi_dinding, String kondisi_atap, String kondisi_pintu, String kondisi_jendela) {
@@ -159,10 +157,6 @@ public class IO extends Super {
 			kondisi_pintu = in.next();
 			System.out.print("Masukkan kondisi jendela       : ");
 		}
-	    @Override
-	    void setfile(String kondisi_lantai, String kondisi_dinding, String kondisi_atap, String kondisi_pintu, String kondisi_jendela){
-	        setfile(kondisi_lantai, kondisi_dinding, kondisi_atap, kondisi_pintu, kondisi_jendela);
-	    }
 	    
 	    
 	    public void kebersihan_ruang_kelas(String sirkulasi_udara, int pencahayaan, int kelembapan, int suhu) {
@@ -177,10 +171,6 @@ public class IO extends Super {
 			System.out.print("Masukkan suhu [celcius]        : ");
 			suhu = in.nextInt();
 		}
-	    @Override
-	    void setfile(String sirkulasi_udara, int pencahayaan, int kelembapan, int suhu){
-	        setfile(sirkulasi_udara, pencahayaan, kelembapan, suhu);  
-	    }
 	    
 	    
 	    public void kenyamanan_ruang_kelas(int kebisingan, String bau, String kebocoran, String kerusakan, String keausan) {
@@ -196,10 +186,6 @@ public class IO extends Super {
 			System.out.print("Masukkan keausan       [Aus/tidak] : ");
 			keausan = in.nextLine();
 		}
-	    @Override
-	    void setfile (int kebisingan, String bau, String kebocoran, String kerusakan, String keausan){
-	        setfile(kebisingan, bau, kebocoran, kerusakan, keausan);
-	    }
 	    
 	    
 	    public void keamanan_ruang(String kekokohan, int jumlah_kunci, int jumlah_jendela, String bahaya) {
@@ -214,41 +200,38 @@ public class IO extends Super {
 			JOptionPane.showMessageDialog(null, "Masukkan aman atau bahaya");
 			System.out.print("Masukkan bahaya                : ");
 			bahaya = in.next();
-		}
-	    void setfile(String kekokohan, int jumlah_kunci, int jumlah_jendela, String bahaya){
-	        setfile(kekokohan, jumlah_kunci, jumlah_jendela, bahaya);
 	    }
 	    
 	    
 	    public void tampil (){
-				System.out.println("Luas ruangan                    : "+z.hitung_luas());
-				System.out.println("Bentuk Ruang                    : "+z.hitung_bentuk());
-				if (z.hitung_rasio() >= 0.5) {
-					System.out.println("Rasio Luas                      : "+ z.hitung_rasio() + " [Sesuai]");
+				System.out.println("Luas ruangan                    : "+call2.hitung_luas());
+				System.out.println("Bentuk Ruang                    : "+call2.hitung_bentuk());
+				if (call2.hitung_rasio() >= 0.5) {
+					System.out.println("Rasio Luas                      : "+ call2.hitung_rasio() + " [Sesuai]");
 				} else {
-					System.out.println("Rasio Luas                      : "+z.hitung_rasio() + " [Tidak sesuai]");
+					System.out.println("Rasio Luas                      : "+call2.hitung_rasio() + " [Tidak sesuai]");
 				}
-				System.out.println("Pintu dan Jendela               : "+z.analisis_pintu_dan_jendela());
-				System.out.println("Kelistrikan                     : "+z.analisis_kelistrikan());
-				System.out.println("LCD                             : "+z.analisis_LCD());
-				System.out.println("Lampu                           : "+z.analisis_lampu());
-				System.out.println("Kipas Angin                     : "+z.analisis_kipas_angin());
-				System.out.println("AC                              : "+z.analisis_AC());
-				System.out.println("Internet                        : "+z.analisis_internet());
-				System.out.println("CCTV                            : "+z.analisis_CCTV());
-				System.out.println("Kebersihan                      : "+z.analisis_kebersihan());
-				System.out.println("Sirkulasi Udara                 : "+z.analisis_sirkulasi_udara());
-				System.out.println("Pencahayaan                     : "+z.analisis_pencahayaan());
-				System.out.println("Kelembapan                      : "+z.analisis_kelembapan());
-				System.out.println("Suhu                            : "+z.analisis_suhu());
-				System.out.println("Kebisingan                      : "+z.analisis_kebisingan());
-				System.out.println("Bau                             : "+z.analisis_bau());
-				System.out.println("Kebocoran                       : "+z.analisis_kebocoran());
-				System.out.println("Kerusakan                       : "+z.analisis_kerusakan());
-				System.out.println("Keausan                         : "+z.analisis_keausan());
-				System.out.println("Kekokohan                       : "+z.analisis_kekokohan());
-				System.out.println("Kunci Pintu dan Jendela         : "+z.analisis_kuncipintu_dan_jendela());
-				System.out.println("keamanan Ruang                  : "+z.analisis_keamanan_ruang());
+				System.out.println("Pintu dan Jendela               : "+call2.analisis_pintu_dan_jendela());
+				System.out.println("Kelistrikan                     : "+call2.analisis_kelistrikan());
+				System.out.println("LCD                             : "+call2.analisis_LCD());
+				System.out.println("Lampu                           : "+call2.analisis_lampu());
+				System.out.println("Kipas Angin                     : "+call2.analisis_kipas_angin());
+				System.out.println("AC                              : "+call2.analisis_AC());
+				System.out.println("Internet                        : "+call2.analisis_internet());
+				System.out.println("CCTV                            : "+call2.analisis_CCTV());
+				System.out.println("Kebersihan                      : "+call2.analisis_kebersihan());
+				System.out.println("Sirkulasi Udara                 : "+call2.analisis_sirkulasi_udara());
+				System.out.println("Pencahayaan                     : "+call2.analisis_pencahayaan());
+				System.out.println("Kelembapan                      : "+call2.analisis_kelembapan());
+				System.out.println("Suhu                            : "+call2.analisis_suhu());
+				System.out.println("Kebisingan                      : "+call2.analisis_kebisingan());
+				System.out.println("Bau                             : "+call2.analisis_bau());
+				System.out.println("Kebocoran                       : "+call2.analisis_kebocoran());
+				System.out.println("Kerusakan                       : "+call2.analisis_kerusakan());
+				System.out.println("Keausan                         : "+call2.analisis_keausan());
+				System.out.println("Kekokohan                       : "+call2.analisis_kekokohan());
+				System.out.println("Kunci Pintu dan Jendela         : "+call2.analisis_kuncipintu_dan_jendela());
+				System.out.println("keamanan Ruang                  : "+call2.analisis_keamanan_ruang());
 			}
 	 public Model getModel(){
 	        return call1;
