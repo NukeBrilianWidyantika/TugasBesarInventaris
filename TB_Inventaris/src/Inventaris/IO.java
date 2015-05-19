@@ -6,22 +6,27 @@ import javax.swing.JOptionPane;
 
 public class IO extends Super implements Interface {
 	    Scanner in = new Scanner(System.in);
-	    Model call1;
+	    Model call1 = new Model();
+	    Model nk;
 	    Control call2 = new Control();
 	    int a,b, steker=0, LCD=0, lampu=0, kipas= 0, AC=0, CCTV=0;
 	    
-	    @Override
+	    public IO(){
+	    	
+	    }
+	    
+	   @Override
 	   public void identitas_ruang_kelas() {
 	    	System.out.println('\n'+"------------------- IDENTITAS RUANG KELAS --------------------"+'\n');
 			System.out.print("Masukkan nama ruang            : ");
-			call1.setNama_ruang (in.next());
+			call1.setNama_ruang(in.next());
 			System.out.print("Masukkan lokasi ruang          : ");
-			call1.setLokasi_ruang (in.next());
+			call1.setLokasi_ruang(in.next());
 			System.out.print("Masukkan fakultas              : ");
 			call1.setFakultas (in.next());
 			
-			call1 = new Model(call1.getNama_ruang(), call1.getLokasi_ruang(), call1.getFakultas());
-	    } 
+			nk = new Model(call1.getNama_ruang(), call1.getLokasi_ruang(), call1.getFakultas());
+	    }
 	    
 	    
 	    
@@ -39,7 +44,7 @@ public class IO extends Super implements Interface {
 	    	System.out.print("Masukkan jumlah jendela        : ");
 	    	call1.setJml_jendela (in.nextInt());
 	    	
-	    	call1 = new Model(call1.getpanjang_ruang(), call1.getlebar_ruang(), call1.getjml_kursi(), call1.getjml_pintu(), call1.getjml_jendela());
+	    	nk = new Model(call1.getpanjang_ruang(), call1.getlebar_ruang(), call1.getjml_kursi(), call1.getjml_pintu(), call1.getjml_jendela());
 	    }
 	    
 	    
@@ -149,7 +154,7 @@ public class IO extends Super implements Interface {
 			System.out.print("Pilih posisi CCTV          [ketik huruf] : ");
 			call1.setPosisi_CCTV (in.next()); 
 	    
-			call1 = new Model(call1.getJml_steker(),call1.getKondisi_steker(),call1.getPosisi_steker(),call1.getJml_kabel_LCD(),
+			nk = new Model(call1.getJml_steker(),call1.getKondisi_steker(),call1.getPosisi_steker(),call1.getJml_kabel_LCD(),
 					call1.getKondisi_kabel_LCD(),call1.getPosisi_kabel_LCD(),call1.getJml_lampu(),call1.getKondisi_lampu(),call1.getPosisi_lampu(),
 					call1.getJml_kipas(),call1.getKondisi_kipas(),call1.getPosisi_kipas(),call1.getJml_AC(),call1.getKondisi_AC(),
 					call1.getPosisi_AC(),call1.getLogin(),call1.getBandwidth(), call1.getJml_CCTV(),call1.getKondisi_CCTV(),call1.getPosisi_CCTV());
@@ -173,7 +178,7 @@ public class IO extends Super implements Interface {
 			System.out.print("Masukkan kondisi jendela       : ");
 			call1.setKondisi_kaca_jendela (in.next());
 			
-			call1 = new Model(call1.getKondisi_lantai(), call1.getKondisi_dinding(), 
+			nk = new Model(call1.getKondisi_lantai(), call1.getKondisi_dinding(), 
 					call1.getKondisi_atap(), call1.getKondisi_pintu(), call1.getKondisi_jendela(), call1.getKondisi_kaca_jendela());
 	    }	    
 	    
@@ -190,7 +195,7 @@ public class IO extends Super implements Interface {
 			System.out.print("Masukkan suhu [celcius]        : ");
 			call1.setSuhu (in.nextInt());
 			
-			call1 = new Model(call1.getSirkulasi_udara(), call1.getNilai_pencahayaan(), call1.getKelembapan(), call1.getSuhu());
+			nk = new Model(call1.getSirkulasi_udara(), call1.getNilai_pencahayaan(), call1.getKelembapan(), call1.getSuhu());
 	    }
 	    
 	    @Override
@@ -207,7 +212,7 @@ public class IO extends Super implements Interface {
 			System.out.print("Masukkan keausan       [Aus/tidak] : ");
 			call1.setKeausan (in.next());
 			
-			call1 = new Model(call1.getKebisingan(), call1.getBau(), call1.getKebocoran(), call1.getKerusakan(), call1.getKeausan());
+			nk = new Model(call1.getKebisingan(), call1.getBau(), call1.getKebocoran(), call1.getKerusakan(), call1.getKeausan());
 	    }
 	    
 	   @Override
@@ -224,17 +229,17 @@ public class IO extends Super implements Interface {
 		   System.out.print("Masukkan bahaya                : ");
 		   call1.setBahaya (in.next());
 		   
-		   call1 = new Model(call1.getKekokohan(), call1.getJml_kunci_pintu(), call1.getJml_kunci_jendela(), call1.getBahaya());
+		   nk = new Model(call1.getKekokohan(), call1.getJml_kunci_pintu(), call1.getJml_kunci_jendela(), call1.getBahaya());
 	   }
 	
 	   
 	   public void tampil (){
-			System.out.println("Luas ruangan                    : "+call2.hitung_luas());
-			System.out.println("Bentuk Ruang                    : "+call2.hitung_bentuk());
-			if (call2.hitung_rasio() >= 0.5) {
-				System.out.println("Rasio Luas                      : "+ call2.hitung_rasio() + " [Sesuai]");
+			System.out.println("Luas ruangan                    : "+call1.hitung_luas(call1.getpanjang_ruang(),call1.getlebar_ruang()));
+			System.out.println("Bentuk Ruang                    : "+call1.hitung_bentuk(call1.getpanjang_ruang(),call1.getlebar_ruang()));
+			if (call1.hitung_rasio(call1.getpanjang_ruang(),call1.getlebar_ruang(),call1.getjml_kursi()) >= 0.5) {
+				System.out.println("Rasio Luas                      : "+ call1.hitung_rasio(call1.getpanjang_ruang(),call1.getlebar_ruang(), call1.getjml_kursi()) + " [Sesuai]");
 			} else {
-				System.out.println("Rasio Luas                      : "+call2.hitung_rasio() + " [Tidak sesuai]");
+				System.out.println("Rasio Luas                      : "+call1.hitung_rasio(call1.getpanjang_ruang(),call1.getlebar_ruang(), call1.getjml_kursi()) + " [Tidak sesuai]");
 			}
 			System.out.println("Pintu dan Jendela               : "+call2.analisis_pintu_dan_jendela());
 			System.out.println("Kelistrikan                     : "+call2.analisis_kelistrikan());
@@ -260,7 +265,7 @@ public class IO extends Super implements Interface {
 			}
 	    
 	    public Model getModel(){
-	        return call1;
+	        return nk;
 	    }
 
 
