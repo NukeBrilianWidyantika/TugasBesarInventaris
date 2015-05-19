@@ -24,7 +24,7 @@ public class Model {
 	protected String kondisi_lampu;
 	private String posisi_lampu;
 	private int jml_kipas;
-	protected String kondisi_kipas;
+	protected String kondisi_kipas; 
 	private String posisi_kipas;
 	private int jml_AC;
 	protected String kondisi_AC;
