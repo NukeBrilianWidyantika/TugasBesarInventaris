@@ -4,27 +4,12 @@ import java.util.Scanner;
 
 public class Control{
 	Model call1 = new Model();
+	Model nk;
 	Scanner in = new Scanner(System.in);
 	int LCD = 0, AC = 0, lampu = 0, kipas = 0, steker = 0, CCTV = 0;
 
-	double hitung_luas() {
-		return call1.getpanjang_ruang() * call1.getlebar_ruang();
-	}
-
-	String hitung_bentuk() {
-		if (call1.getpanjang_ruang() == call1.getlebar_ruang()) {
-			return "Ruangan tidak sesuai";
-		} else {
-			return "Ruangan sesuai";
-		}
-	}
-
-	double hitung_rasio() {
-		return hitung_luas() / call1.getjml_kursi();
-	}
-
 	String analisis_pintu_dan_jendela() {
-		if (call1.getjml_pintu() >= 2) { 
+		if (call1.getjml_pintu() >= 2) {
 			return "Sesuai";
 		} else {
 			return "Tidak sesuai";
