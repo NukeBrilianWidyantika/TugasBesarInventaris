@@ -24,7 +24,7 @@ public class Control{
 	}
 
 	String analisis_pintu_dan_jendela() {
-		if (call1.getjml_pintu() >= 2) {
+		if (call1.getjml_pintu() >= 2) { 
 			return "Sesuai";
 		} else {
 			return "Tidak sesuai";
