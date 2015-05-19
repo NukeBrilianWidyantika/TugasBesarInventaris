@@ -21,7 +21,7 @@ public class IO extends Super implements Interface {
 			call1.setFakultas (in.next());
 			
 			call1 = new Model(call1.getNama_ruang(), call1.getLokasi_ruang(), call1.getFakultas());
-	    }
+	    } 
 	    
 	    
 	    
