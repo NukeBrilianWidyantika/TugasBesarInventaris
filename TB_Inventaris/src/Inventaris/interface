@@ -1,0 +1,22 @@
+package Inventaris;
+
+public interface Interface {
+	void identitas_ruang_kelas();
+	void kondisi_ruang();
+	void jumlah_kondisi_dan_posisi_sarana();
+	void lingkungan_ruang_kelas();
+	void kebersihan_ruang_kelas();
+	void kenyamanan_ruang_kelas();
+	void keamanan_ruang_kelas();
+	
+	/*void output(double panjang_ruang, double lebar_ruang, int jml_kursi, int jml_pintu, int jml_jendela);
+	void output(int jml_steker, String kondisi_steker, String posisi_steker, int jml_kabel_LCD,
+			String kondisi_kabel_LCD, String posisi_kabel_LCD, int jml_lampu, String kondisi_lampu, String posisi_lampu,
+			int jml_kipas, String kondisi_kipas, String posisi_kipas, int jml_AC, String kondisi_AC,
+			String posisi_AC, String login, String bandwidth, int jml_CCTV, String kondisi_CCTV, String posisi_CCTV);
+	void output(String kondisi_lantai, String kondisi_dinding, 
+			String kondisi_atap, String kondisi_pintu, String kondisi_jendela, String kondisi_kaca_jendela);
+	void output(String sirkulasi_udara, double nilai_pencahayaan, double kelembapan, double suhu);
+	void output(String kebisingan, String bau, String kebocoran, String kerusakan, String keausan);
+	void output(String kekokohan, int jml_kunci_pintu, int jml_kunci_jendela, String bahaya);*/
+}
