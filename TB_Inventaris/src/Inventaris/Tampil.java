@@ -1,21 +1,23 @@
-package inventaris;
+package Inventaris;
 
 
-public class tampil {
+public class Tampil {
 	public static void main(String[] args){
-		IO panggil = new IO();
-		//Model a;
-		System.out.println("==============================================================");
-		System.out.println(" 			INVENTARIS KAMPUS");
-		System.out.println("==============================================================");
-		panggil.identitas();
+		IO call1 = new IO();
 		
-		panggil.inputKondisi_ruang();
-		panggil.jml_kondisi_dan_posisi();
-		panggil.inputLingkungan_ruang();
-		panggil.inputKebersihan_ruang();
-		panggil.kenyamanan_ruang();
 		System.out.println("==============================================================");
-		}
-
+		System.out.println("                      INVENTARIS KAMPUS");
+		System.out.println("==============================================================");
+		call1.identitas_ruang_kelas();
+		call1.kondisi_ruang();
+		call1.jumlah_kondisi_dan_posisi_sarana();
+		call1.lingkungan_ruang_kelas();
+		call1.kebersihan_ruang_kelas();
+		call1.kenyamanan_ruang_kelas();
+		call1.keamanan_ruang_kelas();
+		
+		System.out.println("\n========================HASIL ANALISIS========================");
+		call1.tampil();
+		System.out.println("==============================================================");
+	}
 }
