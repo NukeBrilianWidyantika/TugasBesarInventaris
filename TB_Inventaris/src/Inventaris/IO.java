@@ -1,8 +1,20 @@
-package Inventaris;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package Inventaris_Kampus;
 
 import java.util.Scanner;
 
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
+/**
+ *
+ * @author Nuke Brilian
+ */
 
 public class IO extends Super implements Interface {
 	    Scanner in = new Scanner(System.in);
@@ -11,41 +23,40 @@ public class IO extends Super implements Interface {
 	    Control call2 = new Control();
 	    int a,b, steker=0, LCD=0, lampu=0, kipas= 0, AC=0, CCTV=0;
 	    
-	    public IO(){
-	    	
+	    public IO(JTextField nama, JTextField lokasi, JTextField fakultas){
+	    	call1.setNama_ruang(nama.getText());
+                call1.setLokasi_ruang(lokasi.getText());
+                call1.setFakultas(fakultas.getText());
+                nk = new Model(call1.getNama_ruang(), call1.getLokasi_ruang(), call1.getFakultas());
 	    }
+            
+            public IO(JTextField panjang, JTextField lebar, JTextField kursi, JTextField pintu, JTextField jendela){
+                String txt1 = panjang.getText();
+                String txt2 = lebar.getText();
+                String txt3 = kursi.getText();
+                String txt4 = pintu.getText();
+                String txt5 = jendela.getText();
+                
+                call1.setPanjang_ruang(Double.parseDouble(txt1));
+                call1.setLebar_ruang(Double.parseDouble(txt2));
+                call1.setJml_kursi(Integer.parseInt(txt3));
+                call1.setJml_pintu(Integer.parseInt(txt4));
+                call1.setJml_jendela(Integer.parseInt(txt5));
+            }
+            
+            public IO(){
+                
+            }
 	    
 	   @Override
 	   public void identitas_ruang_kelas() {
-	    	System.out.println('\n'+"------------------- IDENTITAS RUANG KELAS --------------------"+'\n');
-			System.out.print("Masukkan nama ruang            : ");
-			call1.setNama_ruang(in.next());
-			System.out.print("Masukkan lokasi ruang          : ");
-			call1.setLokasi_ruang(in.next());
-			System.out.print("Masukkan fakultas              : ");
-			call1.setFakultas (in.next());
-			
-			nk = new Model(call1.getNama_ruang(), call1.getLokasi_ruang(), call1.getFakultas());
+               new Identitas_Ruang().setVisible(true);
 	    }
-	    
-	    
 	    
 	    @Override
 	    public void kondisi_ruang(){
-	    	System.out.println('\n'+"-------------------- KONDISI RUANG KELAS ---------------------"+'\n');
-	    	System.out.print("Masukkan panjang ruang         : ");
-	    	call1.setPanjang_ruang (in.nextDouble());
-	    	System.out.print("Masukkan lebar ruang           : ");
-	    	call1.setLebar_ruang (in.nextDouble());
-	    	System.out.print("Masukkan jumlah kursi          : ");
-	    	call1.setJml_kursi (in.nextInt());
-	    	System.out.print("Masukkan jumlah pintu          : ");
-	    	call1.setJml_pintu (in.nextInt());
-	    	System.out.print("Masukkan jumlah jendela        : ");
-	    	call1.setJml_jendela (in.nextInt());
-	    	
-	    	nk = new Model(call1.getpanjang_ruang(), call1.getlebar_ruang(), call1.getjml_kursi(), call1.getjml_pintu(), call1.getjml_jendela());
-	    }
+                new Kondisi_Ruang().setVisible(true);
+                        }
 	    
 	    
 	    @Override
