@@ -1,0 +1,35 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package Inventaris_Kampus;
+import java.sql.*;
+import javax.swing.*;
+/**
+ *
+ * @author Nuke Brilian
+ */
+public class Koneksi {
+    private String username, password, url;
+    public Connection con = null;
+
+    public Koneksi() {
+        try {
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            url = "jdbc:mysql://localhost/inventaris_kampus";
+            username = "root";
+            password = "";
+            try {
+                con = DriverManager.getConnection(url, username, password);
+                JOptionPane.showMessageDialog(null, "koneksi berhasil");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "server belum start");
+                System.exit(1);
+            }
+        } catch (Exception ex) {
+            System.out.println("salah");
+        }
+    }
+}
