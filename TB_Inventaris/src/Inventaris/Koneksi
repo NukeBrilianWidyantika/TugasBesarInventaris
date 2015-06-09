@@ -3,33 +3,177 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package inventaris_form;
 
-package Inventaris_Kampus;
-import java.sql.*;
-import javax.swing.*;
+import inventaris_kampus.*;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 /**
  *
  * @author Nuke Brilian
  */
 public class Koneksi {
-    private String username, password, url;
-    public Connection con = null;
+
+    Connection conn = null;
+    Statement st = null;
+    String url = "jdbc:mysql://localhost:3306/tugas";
+    String user = "root";
+    String pass = "";
 
     public Koneksi() {
         try {
-            Class.forName("com.mysql.jdbc.Driver").newInstance();
-            url = "jdbc:mysql://localhost/inventaris_kampus";
-            username = "root";
-            password = "";
-            try {
-                con = DriverManager.getConnection(url, username, password);
-                JOptionPane.showMessageDialog(null, "koneksi berhasil");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(null, "server belum start");
-                System.exit(1);
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection(url, user, pass);
+            st = conn.createStatement();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List getInventaris() {
+        ResultSet rs = null;
+        List Model = new ArrayList();
+        try {
+            rs = st.executeQuery("select * from inventaris_kampus1");
+            while (rs.next()) {
+                Model m = new Model();
+                m.setNama_ruang(rs.getString("nama_ruang"));
+                m.setLokasi_ruang(rs.getString("lokasi_ruang"));
+                m.setFakultas(rs.getString("fakultas"));
+                m.setPanjang_ruang(rs.getDouble("panjang_ruang"));
+                m.setLebar_ruang(rs.getDouble("lebar_ruang"));
+                m.setJml_kursi(rs.getInt("jumlah_kursi"));
+                m.setJml_pintu(rs.getInt("jumlah_pintu"));
+                m.setJml_jendela(rs.getInt("jumlah_jendela"));
+                m.setJml_steker(rs.getInt("jumlah_steker"));
+                m.setJml_baik_steker(rs.getInt("kondisi_baik_steker"));
+                m.setPosisi_steker(rs.getString("posisi_sesuai_steker"));
+                m.setJml_kabel_LCD(rs.getInt("jumlah_kabel_LCD"));
+                m.setJml_baik_LCD(rs.getInt("kondisi_baik_LCD"));
+                m.setPosisi_kabel_LCD(rs.getString("posisi_sesuai_LCD"));
+                m.setJml_lampu(rs.getInt("jumlah_lampu"));
+                m.setJml_baik_lampu(rs.getInt("kondisi_baik_lampu"));
+                m.setPosisi_lampu(rs.getString("posisi_sesuai_lampu"));
+                m.setJml_kipas(rs.getInt("jumlah_kipas"));
+                m.setJml_baik_kipas(rs.getInt("kondisi_baik_kipas"));
+                m.setPosisi_kipas(rs.getString("posisi_sesuai_kipas"));
+                m.setJml_AC(rs.getInt("jumlah_AC"));
+                m.setJml_baik_AC(rs.getInt("kondisi_baik_AC"));
+                m.setPosisi_AC(rs.getString("posisi_sesuai_AC"));
+                m.setJml_CCTV(rs.getInt("jumlah_CCTV"));
+                m.setJml_baik_CCTV(rs.getInt("kondisi_baik_CCTV"));
+                m.setPosisi_CCTV(rs.getString("posisi_sesuai_CCTV"));
+                m.setSSID(rs.getString("SSID"));
+                m.setLogin(rs.getString("login"));
+                m.setKondisi_lantai(rs.getString("kondisi_lantai"));
+                m.setKondisi_dinding(rs.getString("kondisi_dinding"));
+                m.setKondisi_atap(rs.getString("kondisi_atap"));
+                m.setKondisi_pintu(rs.getString("kondisi_pintu"));
+                m.setKondisi_jendela(rs.getString("kondisi_jendela"));
+                m.setKondisi_kaca_jendela(rs.getString("kondisi_kaca"));
+                m.setSirkulasi_udara(rs.getString("sirkulasi_udara"));
+                m.setNilai_pencahayaan(rs.getDouble("nilai_pencahayaan"));
+                m.setKelembapan(rs.getDouble("kelembapan"));
+                m.setSuhu(rs.getDouble("suhu"));
+                m.setKebisingan(rs.getString("kebisingan_ruang"));
+                m.setBau(rs.getString("bau_ruang"));
+                m.setKebocoran(rs.getString("kebocoran_ruang"));
+                m.setKerusakan(rs.getString("kerusakan_ruang"));
+                m.setKeausan(rs.getString("keausan_ruang"));
+                m.setKekokohan(rs.getString("kekokohan_ruang"));
+                m.setJml_kunci_pintu(rs.getInt("jumlah_kunci_pintu"));
+                m.setJml_kunci_jendela(rs.getInt("jumlah_kunci_jendela"));
+                m.setBahaya(rs.getString("bahaya_ruang"));
+                Model.add(m);
             }
-        } catch (Exception ex) {
-            System.out.println("salah");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Model;
+    }
+
+    public int Insert(Model m) {
+        int result = 0;
+        try {
+            result = st.executeUpdate("insert into inventaris_kampus1 values('" + m.getNama_ruang() + "','" + m.getLokasi_ruang() + "','" + m.getFakultas() + "','" + m.getPanjang_ruang() + "','" + m.getLebar_ruang() + "','" + m.getJml_kursi() + "','" + m.getJml_pintu() + "','" + m.getJml_jendela() + "','" + m.getJml_steker() + "','" + m.getJml_baik_steker()+ "','" + m.getPosisi_steker()+"','" + m.getJml_kabel_LCD()+"','" + m.getJml_baik_LCD()+"','" + m.getPosisi_kabel_LCD()+"','" + m.getJml_lampu()+"','" + m.getJml_baik_lampu()+"','" + m.getPosisi_lampu()+"','" + m.getJml_kipas()+"','" + m.getJml_baik_kipas()+"','" + m.getPosisi_kipas()+"','" + m.getJml_AC()+"','" + m.getJml_baik_AC()+"','" + m.getPosisi_AC()+"','" + m.getJml_CCTV()+"','" + m.getJml_baik_CCTV()+"','" + m.getPosisi_CCTV()+"','" + m.getSSID()+"','" + m.getLogin()+"','" + m.getKondisi_lantai()+"','" + m.getKondisi_dinding()+"','" + m.getKondisi_atap()+"','" + m.getKondisi_pintu()+"','" + m.getKondisi_jendela()+"','" + m.getKondisi_kaca_jendela()+"','" + m.getSirkulasi_udara()+"','" + m.getNilai_pencahayaan()+"','" + m.getKelembapan()+"','" + m.getSuhu()+"','" + m.getKebisingan()+"','" + m.getBau()+"','" + m.getKebocoran()+"','" + m.getKerusakan()+"','" + m.getKeausan()+"','" + m.getKekokohan()+"','" + m.getJml_kunci_pintu()+"','" + m.getJml_kunci_jendela()+"','" + m.getBahaya()+"')");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public int Delete(Model m) {
+        int result = 0;
+        try {
+            result = st.executeUpdate("delete from inventaris_kampus1 where nama_ruang='" + m.getNama_ruang() + "'");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public int Update(Model m) {
+        int result = 0;
+        try {
+            result = st.executeUpdate("update inventaris_kampus1 set nama_ruang='"
+                    + m.getNama_ruang() + "',lokasi_ruang='" + m.getLokasi_ruang()
+                    + "',fakultas='" + m.getFakultas() + "',panjang_ruang='"
+                    + m.getPanjang_ruang() + "',lebar_ruang='" + m.getLebar_ruang()
+                    + "',jumlah_kursi='" + m.getJml_kursi() + "',jumlah_pintu='"
+                    + m.getJml_pintu() + "',jumlah_jendela='" + m.getJml_jendela()
+                    + "',jumlah_steker='" + m.getJml_steker()
+                    + "',kondisi_baik_steker='" + m.getJml_baik_steker()+ "',posisi_sesuai_steker='"
+                    + m.getPosisi_steker()+ "',jumlah_kabel_LCD='" + m.getJml_kabel_LCD()
+                    + "',kondisi_baik_LCD='" + m.getJml_baik_LCD()+ "',posisi_sesuai_LCD='"
+                    + m.getPosisi_kabel_LCD()+ "',jumlah_lampu='" + m.getJml_lampu()
+                    + "',kondisi_baik_lampu='" + m.getJml_baik_lampu()
+                    + "',posisi_sesuai_lampu='" + m.getPosisi_lampu()+ "',jumlah_kipas='"
+                    + m.getJml_kipas()+ "',kondisi_baik_kipas='" + m.getJml_baik_kipas()
+                    + "',posisi_sesuai_kipas='" + m.getPosisi_kipas()+ "',jumlah_AC='"
+                    + m.getJml_AC()+ "',kondisi_baik_AC='" + m.getJml_baik_AC()
+                    + "',posisi_sesuai_AC='"
+                    + m.getPosisi_AC()+ "',SSID='" + m.getSSID()
+                    + "',login='" + m.getLogin()+ "',jumlah_CCTV='"
+                    + m.getJml_CCTV()+ "', kondisi_baik_CCTV='" + m.getJml_baik_CCTV()
+                    + "',posisi_sesuai_CCTV='" + m.getPosisi_CCTV()
+                    + "',kondisi_lantai='" + m.getKondisi_lantai()+ "',kondisi_dinding='"
+                    + m.getKondisi_dinding()+ "',kondisi_atap='" + m.getKondisi_atap()
+                    + "',kondisi_pintu='" + m.getKondisi_pintu()+ "',kondisi_jendela='"
+                    + m.getKondisi_jendela()+ "',kondisi_kaca='" + m.getKondisi_kaca_jendela()
+                    + "',sirkulasi_udara='" + m.getSirkulasi_udara()
+                    + "',nilai_pencahayaan='" + m.getNilai_pencahayaan()+ "',kelembapan='"
+                    + m.getKelembapan()+ "',suhu='" + m.getSuhu()
+                    + "',kebisingan='" + m.getKebisingan()+ "',bau='"
+                    + m.getBau()+ "',kebocoran='" + m.getKebocoran()
+                    + "',kerusakan='" + m.getKerusakan()
+                    + "',keausan='" + m.getKeausan()+ "',kekokohan='"
+                    + m.getKekokohan()+ "',jumlah_kunci_pintu='" + m.getJml_kunci_pintu()
+                    + "',jumlah_kunci_jendela='" + m.getJml_kunci_jendela()+ "',bahaya='"
+                    + m.getBahaya()+ "' where nama_ruang='" + m.getNama_ruang() + "'");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public void closeConnection() {
+        try {
+            conn.close();
+            st.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
