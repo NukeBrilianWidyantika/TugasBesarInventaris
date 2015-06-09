@@ -1,12 +1,22 @@
-package Inventaris;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
+package inventaris_form;
+
+import inventaris_kampus.*;
+
+/**
+ *
+ * @author Nuke Brilian
+ */
 public interface Interface {
-	void identitas_ruang_kelas();
-	void kondisi_ruang();
-	void jumlah_kondisi_dan_posisi_sarana();
-	void lingkungan_ruang_kelas();
-	void kebersihan_ruang_kelas();
-	void kenyamanan_ruang_kelas();
-	void keamanan_ruang_kelas();
-	
+    void kondisi_ruang();
+    void jumlah_kondisi_dan_posisi_sarana();
+    void lingkungan_ruang_kelas();
+    void kebersihan_ruang_kelas();
+    void kenyamanan_ruang_kelas();
+    void keamanan_ruang_kelas();
 }
