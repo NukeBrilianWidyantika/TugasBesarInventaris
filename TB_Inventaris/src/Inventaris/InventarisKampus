@@ -1,0 +1,3400 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package inventaris_form;
+
+import com.sun.org.apache.xml.internal.dtm.DTM;
+import inventaris_kampus.IO;
+import inventaris_kampus.Koneksi;
+import inventaris_kampus.Model;
+import java.awt.BorderLayout;  
+import java.awt.GridLayout;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.*;
+import javax.swing.JOptionPane;
+import javax.swing.table.*;
+import javax.swing.JTable.*;
+import javax.swing.table.TableColumn;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ *
+ * @author Nuke Brilian
+ */
+public class InventarisKampus extends javax.swing.JFrame {
+    List<Model> inventaris = new ArrayList<Model>();
+    int currentRow = 0;
+    
+    /**
+     * Creates new form InventarisKampus
+     */
+    public InventarisKampus() {
+        initComponents();
+        slider1();
+        slider2();
+        slider3();
+        tampilmodel();
+        loadData();
+        previous_next();
+        button();
+        String lookAndFeel
+                = javax.swing.UIManager.getSystemLookAndFeelClassName();
+        try {
+
+            javax.swing.UIManager.setLookAndFeel(lookAndFeel);
+        } catch (Exception e) {
+        }
+
+        loadData();
+        bindData();
+        this.setTitle("Data Inventaris");
+        txtnama.setEnabled(false);
+        txtlokasi.setEnabled(false);
+        cmbfakultas.setEnabled(false);
+        txtnama.setText("");
+        txtlokasi.setText("");
+        cmbfakultas.setSelectedItem("Pilih Fakultas");
+        this.setLocationRelativeTo(this);
+        btnnext.setEnabled(false);
+        btnprevious.setEnabled(false);
+        btnnew.setEnabled(true);
+        btnlihatdata.setEnabled(true);
+        btnedit.setEnabled(true);
+        btndelete.setEnabled(true);
+        tampilkandata();
+    }
+    public Connection conn;
+    public Statement cn;
+    public ResultSet resultSet;
+    public void koneksi() throws SQLException {
+        try {
+            conn = null;
+            Class.forName("com.mysql.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tugas", "root", "");
+            cn = conn.createStatement();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException e) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Exception es) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, es);
+
+        }
+    }
+    private void button(){
+        btndelete.setEnabled(false);
+        btnedit.setEnabled(false);
+        btnlihatdata.setEnabled(false);
+        btnnew.setEnabled(false);
+        btnnext.setEnabled(false);
+        btnprevious.setEnabled(false);
+        btnreset.setEnabled(false);
+    }
+    private void previous_next(){
+        identitas_ruang.setVisible(false);
+        kondisi_ruang.setVisible(false);
+        sarana_ruang.setVisible(false);
+        steker_ruang.setVisible(false);
+        kabel_LCD.setVisible(false);
+        lampu_ruang.setVisible(false);
+        kipas_ruang.setVisible(false);
+        AC_ruang.setVisible(false);
+        SSID.setVisible(false);
+        CCTV_ruang.setVisible(false);
+        lingkungan_ruang.setVisible(false);
+        kebersihan_ruang.setVisible(false);
+        kenyamanan_ruang.setVisible(false);
+        data.setVisible(false);
+    }
+    public void slider1(){
+        txtnilaipencahayaan.setEditable(false);
+        txtnilaipencahayaan.setText(null);
+        s_nilaipencahayaan.setMinorTickSpacing(5);
+        s_nilaipencahayaan.setMajorTickSpacing(20);
+        s_nilaipencahayaan.setPaintTicks(true);
+        s_nilaipencahayaan.setLabelTable(s_nilaipencahayaan.getLabelTable());
+        s_nilaipencahayaan.setPaintLabels(true);
+        s_nilaipencahayaan.addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged (ChangeEvent e){
+                        txtnilaipencahayaan.setText(String.valueOf(s_nilaipencahayaan.getValue()));
+                }
+            }
+        );
+    }
+    public void slider2(){
+        txtkelembapan.setEditable(false);
+        txtkelembapan.setText(null);
+        s_kelembapan.setMinorTickSpacing(5);
+        s_kelembapan.setMajorTickSpacing(20);
+        s_kelembapan.setPaintTicks(true);
+        s_kelembapan.setLabelTable(s_kelembapan.getLabelTable());
+        s_kelembapan.setPaintLabels(true);
+        s_kelembapan.addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged (ChangeEvent e){
+                        txtkelembapan.setText(String.valueOf(s_kelembapan.getValue()));
+                }
+            }
+        );
+    }
+    public void slider3(){
+        txtsuhu.setEditable(false);
+        txtsuhu.setText(null);
+        s_suhu.setMinorTickSpacing(5);
+        s_suhu.setMajorTickSpacing(20);
+        s_suhu.setPaintTicks(true);
+        s_suhu.setLabelTable(s_suhu.getLabelTable());
+        s_suhu.setPaintLabels(true);
+        s_suhu.addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged (ChangeEvent e){
+                        txtsuhu.setText(String.valueOf(s_suhu.getValue()));
+                }
+            }
+        );
+    }
+    private void tampilkandata() {
+        DefaultTableModel tabeldt = new DefaultTableModel();
+        tabeldt.addColumn("Nama Ruang");
+        tabeldt.addColumn("Lokasi Ruang");
+        tabeldt.addColumn("Fakultas");
+        tabeldt.addColumn("Panjang Ruang");
+        tabeldt.addColumn("Lebar Ruang");
+        tabeldt.addColumn("Jumlah Kursi");
+        tabeldt.addColumn("Jumlah Pintu");
+        tabeldt.addColumn("Jumlah Jendela");
+        tabeldt.addColumn("Jumlah Steker");
+        tabeldt.addColumn("Kondisi Baik Steker");
+        tabeldt.addColumn("Posisi Sesuai Steker");
+        tabeldt.addColumn("Jumlah Kabel LCD");
+        tabeldt.addColumn("Kondisi Baik LCD");
+        tabeldt.addColumn("Posisi Sesuai LCD");
+        tabeldt.addColumn("Jumlah Lampu");
+        tabeldt.addColumn("Kondisi Baik Lampu");
+        tabeldt.addColumn("Posisi Sesuai Lampu");
+        tabeldt.addColumn("Jumlah Kipas");
+        tabeldt.addColumn("Kondisi Baik Kipas");
+        tabeldt.addColumn("Posisi Sesuai Kipas");
+        tabeldt.addColumn("Jumlah AC");
+        tabeldt.addColumn("Kondisi Baik AC");
+        tabeldt.addColumn("Posisi Sesuai AC");
+        tabeldt.addColumn("Jumlah CCTV");
+        tabeldt.addColumn("Kondisi Baik CCTV");
+        tabeldt.addColumn("Posisi Sesuai CCTV");
+        tabeldt.addColumn("SSID");
+        tabeldt.addColumn("Login");
+        tabeldt.addColumn("Kondisi Lantai");
+        tabeldt.addColumn("Kondisi Dinding");
+        tabeldt.addColumn("Kondisi Atap");
+        tabeldt.addColumn("Kondisi Pintu");
+        tabeldt.addColumn("Kondisi Jendela");
+        tabeldt.addColumn("Kondisi Kaca");
+        tabeldt.addColumn("Sirkulasi Udara");
+        tabeldt.addColumn("Nilai Pencahayaan");
+        tabeldt.addColumn("Kelembapan");
+        tabeldt.addColumn("Suhu");
+        tabeldt.addColumn("Kebisingan Ruang");
+        tabeldt.addColumn("Bau Ruang");
+        tabeldt.addColumn("Kebocoran Ruang");
+        tabeldt.addColumn("Kerusakan Ruang");
+        tabeldt.addColumn("Keausan Ruang");
+        tabeldt.addColumn("Kekokohan Ruang");
+        tabeldt.addColumn("Jumlah Kunci Pintu");
+        tabeldt.addColumn("Jumlah Kunci Jendela");
+        tabeldt.addColumn("Bahaya Ruang");
+        try {
+            koneksi();
+            String sql = "select * from inventaris_kampus1";
+            Statement stat = conn.createStatement();
+            ResultSet res = stat.executeQuery(sql);
+            while (res.next()) {
+                tabeldt.addRow(new Object[]{res.getString(1), res.getString(2), res.getString(3), res.getString(4), res.getString(5), res.getString(6), res.getString(7), res.getString(8), res.getString(9), res.getString(10), res.getString(11), res.getString(12), res.getString(13), res.getString(14), res.getString(15), res.getString(16), res.getString(17), res.getString(18), res.getString(19), res.getString(20), res.getString(21), res.getString(22), res.getString(23), res.getString(24), res.getString(25), res.getString(26), res.getString(27), res.getString(28),res.getString(29), res.getString(30), res.getString(31), res.getString(32), res.getString(33), res.getString(34), res.getString(35), res.getString(36), res.getString(37), res.getString(38), res.getString(39), res.getString(40), res.getString(41), res.getString(42), res.getString(43), res.getString(44), res.getString(45), res.getString(46), res.getString(47)});
+            }
+            tbldata.setModel(tabeldt);
+        } catch (Exception e) {
+        }
+    }
+    private void loadData() {
+        Koneksi konek = new Koneksi();
+        inventaris = konek.getInventaris();
+        konek.closeConnection();
+    }
+    private void bindData() {
+        if (inventaris.size() > 0) {
+            Model m = inventaris.get(currentRow);
+            txtnama.setText(m.getNama_ruang());
+            txtlokasi.setText(m.getLokasi_ruang());
+            cmbfakultas.setSelectedItem(m.getFakultas());
+            txtpanjang.setSelectionEnd((int) m.getPanjang_ruang());
+            txtlebar.setSelectionEnd((int) m.getLebar_ruang());
+            txtjmlkursi.setSelectionEnd(m.getJml_kursi());
+            txtjmlpintu.setSelectionEnd(m.getJml_pintu());
+            txtjmljendela.setSelectionEnd(m.getJml_jendela());
+        } else {
+            currentRow = 0;
+            txtnama.setText("");
+            txtlokasi.setText("");
+            cmbfakultas.setSelectedItem("");
+            txtpanjang.setText("");
+            txtlebar.setText("");
+            txtjmlkursi.setText("");
+            txtjmlpintu.setText("");
+            txtjmljendela.setText("");
+            
+        }
+    }
+    //untuk membuat void pengaturan lebar kolom
+    private void atur(JTable lihat, int lebar[]) {
+        try {
+            lihat.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            int banyak = lihat.getColumnCount();
+            for (int i = 0; i < banyak; i++) {
+                TableColumn kolom = lihat.getColumnModel().getColumn(i);
+                kolom.setPreferredWidth(lebar[i]);
+                lihat.setRowHeight(20);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "salah" + e);
+        }
+    }
+    //untuk membuat void colom yang sesuai kita inginkan
+    private void tampilmodel() {
+        try {
+            String[] kolom = {"Nama Ruang", "Lokasi Ruang", "Fakultas", "Panjang Ruang", "Lebar Ruang", "Jumlah Kursi", "Jumlah Pintu", "Jumlah Jendela", "Jumlah Steker", "Kondisi Baik Steker", "Posisi Sesuai Steker", "Jumlah Kabel LCD", "Kondisi Baik LCD", "Posisi Sesuai LCD", "Jumlah Lampu", "Kondisi Baik Lampu", "Posisi Sesuai Lampu", "Jumlah Kipas", "Kondisi Baik Kipas", "Posisi Sesuai Kipas", "Jumlah AC", "Kondisi Baik AC", "Posisi Sesuai AC", "Jumlah CCTV", "Kondisi Baik CCTV", "Posisi Sesuai CCTV", "SSID", "Login", "Kondisi Lantai", "Kondisi Dinding", "Kondisi Atap", "Kondisi Pintu", "Kondisi Jendela", "Kondisi Kaca", "Sirkulasi Udara", "Nilai Pencahayaan", "Kelembapan", "Suhu", "Kebisingan Ruang", "Bau Ruang", "Kebocoran Ruang", "Kerusakan Ruang", "Keausan Ruang", "Kekokohan Ruang", "Jumlah Kunci Pintu", "Jumlah Kunci Jendela", "Bahaya Ruang"};
+            DefaultTableModel dtm = new DefaultTableModel(null, kolom) {
+                @Override
+                public boolean isCellEditable(int rowIndex, int columnIndex) {
+                    return false;
+                }
+            };
+            tbldata.setModel(dtm);
+            atur(tbldata, new int []{100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100});
+            }catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "salah" + e);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        InventarisKampus = new javax.swing.JPanel();
+        identitas_ruang = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        txtnama = new javax.swing.JTextField();
+        txtlokasi = new javax.swing.JTextField();
+        cmbfakultas = new javax.swing.JComboBox();
+        kondisi_ruang = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        txtpanjang = new javax.swing.JTextField();
+        txtlebar = new javax.swing.JTextField();
+        txtjmlkursi = new javax.swing.JTextField();
+        txtjmlpintu = new javax.swing.JTextField();
+        txtjmljendela = new javax.swing.JTextField();
+        data = new javax.swing.JPanel();
+        jLabel11 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tbldata = new javax.swing.JTable();
+        sarana_ruang = new javax.swing.JPanel();
+        jLabel12 = new javax.swing.JLabel();
+        sarana = new javax.swing.JPanel();
+        steker_ruang = new javax.swing.JPanel();
+        jLabel38 = new javax.swing.JLabel();
+        jLabel39 = new javax.swing.JLabel();
+        jLabel40 = new javax.swing.JLabel();
+        cbsteker5 = new javax.swing.JCheckBox();
+        cbsteker6 = new javax.swing.JCheckBox();
+        cbsteker8 = new javax.swing.JCheckBox();
+        cbsteker9 = new javax.swing.JCheckBox();
+        cbsteker10 = new javax.swing.JCheckBox();
+        cbsteker7 = new javax.swing.JCheckBox();
+        jLabel79 = new javax.swing.JLabel();
+        txtjmlsteker = new javax.swing.JTextField();
+        txtjmlkondisisteker = new javax.swing.JTextField();
+        txtposisisteker = new javax.swing.JTextField();
+        jLabel41 = new javax.swing.JLabel();
+        kabel_LCD = new javax.swing.JPanel();
+        jLabel43 = new javax.swing.JLabel();
+        jLabel44 = new javax.swing.JLabel();
+        jLabel45 = new javax.swing.JLabel();
+        cbLCD3 = new javax.swing.JCheckBox();
+        cbLCD4 = new javax.swing.JCheckBox();
+        jLabel80 = new javax.swing.JLabel();
+        txtjmlLCD = new javax.swing.JTextField();
+        txtjmlkondisiLCD = new javax.swing.JTextField();
+        txtposisiLCD = new javax.swing.JTextField();
+        lampu_ruang = new javax.swing.JPanel();
+        jLabel48 = new javax.swing.JLabel();
+        jLabel49 = new javax.swing.JLabel();
+        jLabel52 = new javax.swing.JLabel();
+        cblampu5 = new javax.swing.JCheckBox();
+        cblampu6 = new javax.swing.JCheckBox();
+        jLabel81 = new javax.swing.JLabel();
+        txtjmllampu = new javax.swing.JTextField();
+        txtjmlkondisilampu = new javax.swing.JTextField();
+        txtposisilampu = new javax.swing.JTextField();
+        kipas_ruang = new javax.swing.JPanel();
+        jLabel53 = new javax.swing.JLabel();
+        jLabel54 = new javax.swing.JLabel();
+        jLabel57 = new javax.swing.JLabel();
+        cbkipas5 = new javax.swing.JCheckBox();
+        cbkipas6 = new javax.swing.JCheckBox();
+        jLabel82 = new javax.swing.JLabel();
+        txtjmlkipas = new javax.swing.JTextField();
+        txtjmlkondisikipas = new javax.swing.JTextField();
+        txtposisikipas = new javax.swing.JTextField();
+        AC_ruang = new javax.swing.JPanel();
+        jLabel58 = new javax.swing.JLabel();
+        jLabel59 = new javax.swing.JLabel();
+        jLabel62 = new javax.swing.JLabel();
+        cbAC5 = new javax.swing.JCheckBox();
+        cbAC6 = new javax.swing.JCheckBox();
+        cbAC7 = new javax.swing.JCheckBox();
+        jLabel83 = new javax.swing.JLabel();
+        txtjmlAC = new javax.swing.JTextField();
+        txtjmlkondisiAC = new javax.swing.JTextField();
+        txtposisiAC = new javax.swing.JTextField();
+        SSID = new javax.swing.JPanel();
+        jLabel68 = new javax.swing.JLabel();
+        jLabel69 = new javax.swing.JLabel();
+        jLabel70 = new javax.swing.JLabel();
+        jLabel71 = new javax.swing.JLabel();
+        jLabel72 = new javax.swing.JLabel();
+        cmbpilihSSID = new javax.swing.JComboBox();
+        rbtnbisa_login = new javax.swing.JRadioButton();
+        rbtntdkbisa_login = new javax.swing.JRadioButton();
+        txtlogin = new javax.swing.JTextField();
+        CCTV_ruang = new javax.swing.JPanel();
+        jLabel63 = new javax.swing.JLabel();
+        jLabel64 = new javax.swing.JLabel();
+        jLabel67 = new javax.swing.JLabel();
+        cbCCTV5 = new javax.swing.JCheckBox();
+        cbCCTV8 = new javax.swing.JCheckBox();
+        jLabel84 = new javax.swing.JLabel();
+        txtjmlCCTV = new javax.swing.JTextField();
+        txtjmlkondisiCCTV = new javax.swing.JTextField();
+        txtposisiCCTV = new javax.swing.JTextField();
+        lingkungan_ruang = new javax.swing.JPanel();
+        jLabel13 = new javax.swing.JLabel();
+        jLabel14 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        jLabel18 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
+        rbtnlingkungan1 = new javax.swing.JRadioButton();
+        rbtnlingkungan13 = new javax.swing.JRadioButton();
+        rbtnlingkungan2 = new javax.swing.JRadioButton();
+        rbtnlingkungan14 = new javax.swing.JRadioButton();
+        rbtnlingkungan3 = new javax.swing.JRadioButton();
+        rbtnlingkungan15 = new javax.swing.JRadioButton();
+        rbtnlingkungan4 = new javax.swing.JRadioButton();
+        rbtnlingkungan16 = new javax.swing.JRadioButton();
+        rbtnlingkungan5 = new javax.swing.JRadioButton();
+        rbtnlingkungan17 = new javax.swing.JRadioButton();
+        rbtnlingkungan6 = new javax.swing.JRadioButton();
+        rbtnlingkungan18 = new javax.swing.JRadioButton();
+        rbtnlingkungan7 = new javax.swing.JRadioButton();
+        rbtnlingkungan8 = new javax.swing.JRadioButton();
+        rbtnlingkungan9 = new javax.swing.JRadioButton();
+        rbtnlingkungan10 = new javax.swing.JRadioButton();
+        rbtnlingkungan11 = new javax.swing.JRadioButton();
+        rbtnlingkungan12 = new javax.swing.JRadioButton();
+        txtkondisilantai = new javax.swing.JTextField();
+        txtkondisidinding = new javax.swing.JTextField();
+        txtkondisiatap = new javax.swing.JTextField();
+        txtkondisipintu = new javax.swing.JTextField();
+        txtkondisijendela = new javax.swing.JTextField();
+        txtkondisikaca = new javax.swing.JTextField();
+        kebersihan_ruang = new javax.swing.JPanel();
+        jLabel20 = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
+        jLabel22 = new javax.swing.JLabel();
+        jLabel23 = new javax.swing.JLabel();
+        jLabel24 = new javax.swing.JLabel();
+        s_nilaipencahayaan = new javax.swing.JSlider();
+        s_kelembapan = new javax.swing.JSlider();
+        s_suhu = new javax.swing.JSlider();
+        rbtnkebersihan1 = new javax.swing.JRadioButton();
+        rbtnkebersihan2 = new javax.swing.JRadioButton();
+        txtnilaipencahayaan = new javax.swing.JTextField();
+        txtkelembapan = new javax.swing.JTextField();
+        txtsuhu = new javax.swing.JTextField();
+        jLabel25 = new javax.swing.JLabel();
+        jLabel26 = new javax.swing.JLabel();
+        txtsirkulasiudara = new javax.swing.JTextField();
+        kenyamanan_ruang = new javax.swing.JPanel();
+        jLabel27 = new javax.swing.JLabel();
+        jLabel28 = new javax.swing.JLabel();
+        jLabel29 = new javax.swing.JLabel();
+        jLabel30 = new javax.swing.JLabel();
+        jLabel31 = new javax.swing.JLabel();
+        jLabel32 = new javax.swing.JLabel();
+        rbtnkenyamanan1 = new javax.swing.JRadioButton();
+        rbtnkenyamanan6 = new javax.swing.JRadioButton();
+        rbtnkenyamanan2 = new javax.swing.JRadioButton();
+        rbtnkenyamanan7 = new javax.swing.JRadioButton();
+        rbtnkenyamanan3 = new javax.swing.JRadioButton();
+        rbtnkenyamanan8 = new javax.swing.JRadioButton();
+        rbtnkenyamanan4 = new javax.swing.JRadioButton();
+        rbtnkenyamanan9 = new javax.swing.JRadioButton();
+        rbtnkenyamanan5 = new javax.swing.JRadioButton();
+        rbtnkenyamanan10 = new javax.swing.JRadioButton();
+        txtkebisingan = new javax.swing.JTextField();
+        txtbau = new javax.swing.JTextField();
+        txtkebocoran = new javax.swing.JTextField();
+        txtkerusakan = new javax.swing.JTextField();
+        txtkeausan = new javax.swing.JTextField();
+        keamanan_ruang = new javax.swing.JPanel();
+        jLabel33 = new javax.swing.JLabel();
+        jLabel34 = new javax.swing.JLabel();
+        jLabel35 = new javax.swing.JLabel();
+        jLabel36 = new javax.swing.JLabel();
+        jLabel37 = new javax.swing.JLabel();
+        rbtnkeamanan1 = new javax.swing.JRadioButton();
+        rbtnkeamanan4 = new javax.swing.JRadioButton();
+        txtkuncipintu = new javax.swing.JTextField();
+        txtkuncijendela = new javax.swing.JTextField();
+        rbtnkeamanan2 = new javax.swing.JRadioButton();
+        rbtnkeamanan3 = new javax.swing.JRadioButton();
+        txtkekokohan = new javax.swing.JTextField();
+        txtbahaya = new javax.swing.JTextField();
+        Tombol = new javax.swing.JPanel();
+        btnnew = new javax.swing.JButton();
+        btnlihatdata = new javax.swing.JButton();
+        btnedit = new javax.swing.JButton();
+        btndelete = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
+        btnreset = new javax.swing.JButton();
+        btnnext = new javax.swing.JButton();
+        btnprevious = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        InventarisKampus.setLayout(new java.awt.CardLayout());
+
+        identitas_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("IDENTITAS RUANG KELAS");
+
+        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setText("Nama Ruang Kelas");
+
+        jLabel4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel4.setText("Lokasi Ruang Kelas");
+
+        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setText("Program Studi / Fakultas");
+
+        txtnama.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtlokasi.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        cmbfakultas.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        cmbfakultas.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pilih Fakultas", "Fakultas Agama Islam", "Fakultas Ilmu Sosial dan Ilmu Politik", "Fakultas Keguruan dan Ilmu Pendidikan", "Fakultas Hukum", "Fakultas Teknik", "Fakultas Ekonomi dan Bisnis", "Fakultas Pertanian - Pertenakan", "Fakultas Psikologi", "Fakultas Kedokteran", "Fakultas Ilmu Kesehatan", "Pasca Sarjana" }));
+
+        javax.swing.GroupLayout identitas_ruangLayout = new javax.swing.GroupLayout(identitas_ruang);
+        identitas_ruang.setLayout(identitas_ruangLayout);
+        identitas_ruangLayout.setHorizontalGroup(
+            identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(identitas_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, identitas_ruangLayout.createSequentialGroup()
+                        .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                        .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtnama)
+                            .addComponent(txtlokasi)
+                            .addComponent(cmbfakultas, 0, 353, Short.MAX_VALUE))))
+                .addContainerGap())
+        );
+        identitas_ruangLayout.setVerticalGroup(
+            identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(identitas_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(txtnama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(txtlokasi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(identitas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(cmbfakultas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(130, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(identitas_ruang, "card2");
+
+        kondisi_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setText("KONDISI RUANG KELAS");
+
+        jLabel6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel6.setText("Panjang Ruangan");
+
+        jLabel7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel7.setText("Lebar Ruangan");
+
+        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel8.setText("Jumlah Kursi");
+
+        jLabel9.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel9.setText("Jumlah Pintu");
+
+        jLabel10.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel10.setText("Jumlah Jendela");
+
+        txtpanjang.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtlebar.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkursi.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlpintu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmljendela.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout kondisi_ruangLayout = new javax.swing.GroupLayout(kondisi_ruang);
+        kondisi_ruang.setLayout(kondisi_ruangLayout);
+        kondisi_ruangLayout.setHorizontalGroup(
+            kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kondisi_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE)
+                    .addGroup(kondisi_ruangLayout.createSequentialGroup()
+                        .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel7)
+                            .addComponent(jLabel8)
+                            .addComponent(jLabel10)
+                            .addComponent(jLabel9))
+                        .addGap(36, 36, 36)
+                        .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtpanjang)
+                            .addComponent(txtlebar)
+                            .addComponent(txtjmlkursi)
+                            .addComponent(txtjmlpintu)
+                            .addComponent(txtjmljendela))))
+                .addContainerGap())
+        );
+        kondisi_ruangLayout.setVerticalGroup(
+            kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kondisi_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(txtpanjang, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(txtlebar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(15, 15, 15)
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(txtjmlkursi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(15, 15, 15)
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(txtjmlpintu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(15, 15, 15)
+                .addGroup(kondisi_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel10)
+                    .addComponent(txtjmljendela, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(57, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(kondisi_ruang, "card3");
+
+        jLabel11.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel11.setText("DATA INVENTARIS KAMPUS");
+
+        tbldata.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "Nama Ruang", "Lokasi Ruang", "Fakultas", "Panjang Ruang", "Lebar Ruang", "Jumlah Kursi", "Jumlah Pintu", "Jumlah Jendela", "Jumlah Steker", "Kondisi Baik Steker", "Posisi Sesuai Steker", "Jumlah Kabel LCD", "Kondisi Baik LCD", "Posisi Sesuai LCD", "Jumlah Lampu", "Kondisi Baik Lampu", "Posisi Sesuai Lampu", "Jumlah Kipas", "Kondisi Baik Kipas", "Posisi Sesuai Kipas", "Jumlah AC", "Kondisi Baik AC", "Posisi Sesuai AC", "Jumlah CCTV", "Kondisi Baik CCTV", "Posisi Sesuai CCTV", "SSID", "Login", "Kondisi Lantai", "Kondisi Dinding", "Kondisi Atap", "Kondisi Pintu", "Kondisi Jendela", "Kondisi Kaca", "Sirkulasi Udara", "Nilai Pencahayaan", "Kelembapan", "Suhu", "Kebisingan Ruang", "Bau Ruang", "Kebocoran Ruang", "Kerusakan Ruang", "Keausan Ruang", "Kekokohan Ruang", "Jumlah Kunci Pintu", "Jumlah Kunci Jendela", "Bahaya Ruang"
+            }
+        ));
+        jScrollPane2.setViewportView(tbldata);
+
+        javax.swing.GroupLayout dataLayout = new javax.swing.GroupLayout(data);
+        data.setLayout(dataLayout);
+        dataLayout.setHorizontalGroup(
+            dataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(dataLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel11, javax.swing.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE)
+                .addContainerGap())
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
+        );
+        dataLayout.setVerticalGroup(
+            dataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(dataLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(data, "card4");
+
+        sarana_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel12.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel12.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel12.setText("SARANA RUANG KELAS");
+
+        sarana.setLayout(new java.awt.CardLayout());
+
+        steker_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel38.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel38.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel38.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel38.setText("STOP KONTAK ATAU STEKER RUANGAN");
+
+        jLabel39.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel39.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel39.setText("Jumlah Kondisi");
+
+        jLabel40.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel40.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel40.setText("Posisi Steker");
+
+        cbsteker5.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker5.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker5.setText("Dipojok Ruang");
+        cbsteker5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker5ActionPerformed(evt);
+            }
+        });
+
+        cbsteker6.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker6.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker6.setText("Dipojok Dekat Pintu");
+        cbsteker6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker6ActionPerformed(evt);
+            }
+        });
+
+        cbsteker8.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker8.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker8.setText("Didepan Ruang");
+        cbsteker8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker8ActionPerformed(evt);
+            }
+        });
+
+        cbsteker9.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker9.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker9.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker9.setText("Disamping Ruang");
+        cbsteker9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker9ActionPerformed(evt);
+            }
+        });
+
+        cbsteker10.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker10.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker10.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker10.setText("Dibelakang Ruang");
+        cbsteker10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker10ActionPerformed(evt);
+            }
+        });
+
+        cbsteker7.setBackground(new java.awt.Color(102, 102, 102));
+        cbsteker7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbsteker7.setForeground(new java.awt.Color(255, 255, 255));
+        cbsteker7.setText("Dipojok Ruang dan Dekat Dosen");
+        cbsteker7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbsteker7ActionPerformed(evt);
+            }
+        });
+
+        jLabel79.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel79.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel79.setText("Jumlah Steker");
+
+        txtjmlsteker.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisisteker.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        jLabel41.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel41.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel41.setText("Baik Steker");
+
+        javax.swing.GroupLayout steker_ruangLayout = new javax.swing.GroupLayout(steker_ruang);
+        steker_ruang.setLayout(steker_ruangLayout);
+        steker_ruangLayout.setHorizontalGroup(
+            steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(steker_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jLabel38, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(steker_ruangLayout.createSequentialGroup()
+                            .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel40)
+                                .addComponent(jLabel39)
+                                .addComponent(jLabel41))
+                            .addGap(30, 30, 30)
+                            .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(steker_ruangLayout.createSequentialGroup()
+                                    .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(cbsteker5)
+                                        .addComponent(cbsteker6)
+                                        .addComponent(cbsteker7))
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(cbsteker8)
+                                        .addComponent(cbsteker9)
+                                        .addComponent(cbsteker10)))
+                                .addComponent(txtposisisteker, javax.swing.GroupLayout.PREFERRED_SIZE, 398, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtjmlkondisisteker, javax.swing.GroupLayout.PREFERRED_SIZE, 398, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(steker_ruangLayout.createSequentialGroup()
+                            .addComponent(jLabel79)
+                            .addGap(35, 35, 35)
+                            .addComponent(txtjmlsteker, javax.swing.GroupLayout.PREFERRED_SIZE, 398, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(36, Short.MAX_VALUE))
+        );
+        steker_ruangLayout.setVerticalGroup(
+            steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, steker_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel38)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel79)
+                    .addComponent(txtjmlsteker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(steker_ruangLayout.createSequentialGroup()
+                        .addComponent(jLabel39)
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel41))
+                    .addGroup(steker_ruangLayout.createSequentialGroup()
+                        .addComponent(txtjmlkondisisteker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addGap(18, 18, 18)
+                .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel40)
+                    .addGroup(steker_ruangLayout.createSequentialGroup()
+                        .addGroup(steker_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(steker_ruangLayout.createSequentialGroup()
+                                .addComponent(cbsteker8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbsteker9)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbsteker10))
+                            .addGroup(steker_ruangLayout.createSequentialGroup()
+                                .addComponent(cbsteker5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbsteker6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cbsteker7)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtposisisteker, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(42, 42, 42))
+        );
+
+        sarana.add(steker_ruang, "card2");
+
+        kabel_LCD.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel43.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel43.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel43.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel43.setText("KABEL LCD RUANGAN");
+
+        jLabel44.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel44.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel44.setText("Jumlah Kondisi Baik Kabel LCD");
+
+        jLabel45.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel45.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel45.setText("Posisi Kabel LCD");
+
+        cbLCD3.setBackground(new java.awt.Color(102, 102, 102));
+        cbLCD3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbLCD3.setForeground(new java.awt.Color(255, 255, 255));
+        cbLCD3.setText("Dekat Dosen");
+        cbLCD3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbLCD3ActionPerformed(evt);
+            }
+        });
+
+        cbLCD4.setBackground(new java.awt.Color(102, 102, 102));
+        cbLCD4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbLCD4.setForeground(new java.awt.Color(255, 255, 255));
+        cbLCD4.setText("Dekat Pintu");
+        cbLCD4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbLCD4ActionPerformed(evt);
+            }
+        });
+
+        jLabel80.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel80.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel80.setText("Jumlah Kabel LCD");
+
+        txtjmlLCD.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisiLCD.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtposisiLCD.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout kabel_LCDLayout = new javax.swing.GroupLayout(kabel_LCD);
+        kabel_LCD.setLayout(kabel_LCDLayout);
+        kabel_LCDLayout.setHorizontalGroup(
+            kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kabel_LCDLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(kabel_LCDLayout.createSequentialGroup()
+                        .addComponent(jLabel43, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .addGroup(kabel_LCDLayout.createSequentialGroup()
+                        .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel80)
+                            .addComponent(jLabel44)
+                            .addComponent(jLabel45))
+                        .addGap(18, 18, 18)
+                        .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(kabel_LCDLayout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(txtjmlLCD, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(35, 35, 35))
+                            .addGroup(kabel_LCDLayout.createSequentialGroup()
+                                .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtjmlkondisiLCD, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(kabel_LCDLayout.createSequentialGroup()
+                                        .addComponent(cbLCD3)
+                                        .addGap(42, 42, 42)
+                                        .addComponent(cbLCD4))
+                                    .addComponent(txtposisiLCD, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(0, 0, Short.MAX_VALUE))))))
+        );
+        kabel_LCDLayout.setVerticalGroup(
+            kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kabel_LCDLayout.createSequentialGroup()
+                .addComponent(jLabel43)
+                .addGap(30, 30, 30)
+                .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel80)
+                    .addComponent(txtjmlLCD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel44)
+                    .addComponent(txtjmlkondisiLCD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(19, 19, 19)
+                .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(kabel_LCDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(cbLCD3, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(cbLCD4))
+                    .addComponent(jLabel45))
+                .addGap(2, 2, 2)
+                .addComponent(txtposisiLCD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        sarana.add(kabel_LCD, "card3");
+
+        lampu_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel48.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel48.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel48.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel48.setText("LAMPU RUANGAN");
+
+        jLabel49.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel49.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel49.setText("Jumlah Kondisi Baik  Lampu");
+
+        jLabel52.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel52.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel52.setText("Posisi Lampu");
+
+        cblampu5.setBackground(new java.awt.Color(102, 102, 102));
+        cblampu5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cblampu5.setForeground(new java.awt.Color(255, 255, 255));
+        cblampu5.setText("Diatap Ruang");
+        cblampu5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cblampu5ActionPerformed(evt);
+            }
+        });
+
+        cblampu6.setBackground(new java.awt.Color(102, 102, 102));
+        cblampu6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cblampu6.setForeground(new java.awt.Color(255, 255, 255));
+        cblampu6.setText("Lainnya");
+        cblampu6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cblampu6ActionPerformed(evt);
+            }
+        });
+
+        jLabel81.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel81.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel81.setText("Jumlah Lampu");
+
+        txtjmllampu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisilampu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtposisilampu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout lampu_ruangLayout = new javax.swing.GroupLayout(lampu_ruang);
+        lampu_ruang.setLayout(lampu_ruangLayout);
+        lampu_ruangLayout.setHorizontalGroup(
+            lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lampu_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel48, javax.swing.GroupLayout.DEFAULT_SIZE, 567, Short.MAX_VALUE)
+                .addContainerGap())
+            .addGroup(lampu_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel81)
+                    .addComponent(jLabel49)
+                    .addComponent(jLabel52))
+                .addGap(21, 21, 21)
+                .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtjmlkondisilampu)
+                    .addComponent(txtjmllampu)
+                    .addGroup(lampu_ruangLayout.createSequentialGroup()
+                        .addComponent(cblampu5)
+                        .addGap(38, 38, 38)
+                        .addComponent(cblampu6))
+                    .addComponent(txtposisilampu, javax.swing.GroupLayout.PREFERRED_SIZE, 320, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        lampu_ruangLayout.setVerticalGroup(
+            lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lampu_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel48)
+                .addGap(27, 27, 27)
+                .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel81)
+                    .addComponent(txtjmllampu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel49)
+                    .addComponent(txtjmlkondisilampu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel52)
+                    .addGroup(lampu_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(cblampu5)
+                        .addComponent(cblampu6)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtposisilampu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(80, Short.MAX_VALUE))
+        );
+
+        sarana.add(lampu_ruang, "card4");
+
+        kipas_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel53.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel53.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel53.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel53.setText("KIPAS ANGIN RUANGAN");
+
+        jLabel54.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel54.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel54.setText("Jumlah Kondisi Baik Kipas Angin");
+
+        jLabel57.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel57.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel57.setText("Posisi Kipas Angin");
+
+        cbkipas5.setBackground(new java.awt.Color(102, 102, 102));
+        cbkipas5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbkipas5.setForeground(new java.awt.Color(255, 255, 255));
+        cbkipas5.setText("Diatap Ruang");
+        cbkipas5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbkipas5ActionPerformed(evt);
+            }
+        });
+
+        cbkipas6.setBackground(new java.awt.Color(102, 102, 102));
+        cbkipas6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbkipas6.setForeground(new java.awt.Color(255, 255, 255));
+        cbkipas6.setText("Lainnya");
+        cbkipas6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbkipas6ActionPerformed(evt);
+            }
+        });
+
+        jLabel82.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel82.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel82.setText("Jumlah Kipas Angin");
+
+        txtjmlkipas.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisikipas.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtposisikipas.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout kipas_ruangLayout = new javax.swing.GroupLayout(kipas_ruang);
+        kipas_ruang.setLayout(kipas_ruangLayout);
+        kipas_ruangLayout.setHorizontalGroup(
+            kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kipas_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel53, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(kipas_ruangLayout.createSequentialGroup()
+                        .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel54)
+                            .addComponent(jLabel82)
+                            .addComponent(jLabel57))
+                        .addGap(18, 18, 18)
+                        .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(kipas_ruangLayout.createSequentialGroup()
+                                .addComponent(cbkipas5)
+                                .addGap(50, 50, 50)
+                                .addComponent(cbkipas6))
+                            .addComponent(txtjmlkondisikipas, javax.swing.GroupLayout.DEFAULT_SIZE, 288, Short.MAX_VALUE)
+                            .addComponent(txtjmlkipas)
+                            .addComponent(txtposisikipas))
+                        .addGap(0, 30, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        kipas_ruangLayout.setVerticalGroup(
+            kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kipas_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel53)
+                .addGap(29, 29, 29)
+                .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel82)
+                    .addComponent(txtjmlkipas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
+                .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtjmlkondisikipas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel54))
+                .addGap(20, 20, 20)
+                .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel57)
+                    .addGroup(kipas_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(cbkipas5)
+                        .addComponent(cbkipas6)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtposisikipas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(80, 80, 80))
+        );
+
+        sarana.add(kipas_ruang, "card5");
+
+        AC_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel58.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel58.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel58.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel58.setText("AC RUANGAN");
+
+        jLabel59.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel59.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel59.setText("Jumlah Kondisi Baik AC");
+
+        jLabel62.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel62.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel62.setText("Posisi AC");
+
+        cbAC5.setBackground(new java.awt.Color(102, 102, 102));
+        cbAC5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbAC5.setForeground(new java.awt.Color(255, 255, 255));
+        cbAC5.setText("Didepan Ruang");
+        cbAC5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbAC5ActionPerformed(evt);
+            }
+        });
+
+        cbAC6.setBackground(new java.awt.Color(102, 102, 102));
+        cbAC6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbAC6.setForeground(new java.awt.Color(255, 255, 255));
+        cbAC6.setText("Disamping Ruang");
+        cbAC6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbAC6ActionPerformed(evt);
+            }
+        });
+
+        cbAC7.setBackground(new java.awt.Color(102, 102, 102));
+        cbAC7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbAC7.setForeground(new java.awt.Color(255, 255, 255));
+        cbAC7.setText("Dibelakang Ruang");
+        cbAC7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbAC7ActionPerformed(evt);
+            }
+        });
+
+        jLabel83.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel83.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel83.setText("Jumlah AC");
+
+        txtjmlAC.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisiAC.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtposisiAC.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout AC_ruangLayout = new javax.swing.GroupLayout(AC_ruang);
+        AC_ruang.setLayout(AC_ruangLayout);
+        AC_ruangLayout.setHorizontalGroup(
+            AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(AC_ruangLayout.createSequentialGroup()
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel58, javax.swing.GroupLayout.DEFAULT_SIZE, 567, Short.MAX_VALUE)
+                    .addGroup(AC_ruangLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel83)
+                        .addGap(120, 120, 120)
+                        .addComponent(txtjmlAC, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+            .addGroup(AC_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel59)
+                    .addComponent(jLabel62))
+                .addGap(32, 32, 32)
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtjmlkondisiAC, javax.swing.GroupLayout.PREFERRED_SIZE, 341, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(AC_ruangLayout.createSequentialGroup()
+                        .addGap(1, 1, 1)
+                        .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cbAC6)
+                            .addComponent(cbAC5)
+                            .addComponent(cbAC7)
+                            .addComponent(txtposisiAC, javax.swing.GroupLayout.PREFERRED_SIZE, 341, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        AC_ruangLayout.setVerticalGroup(
+            AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(AC_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel58)
+                .addGap(18, 18, 18)
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel83)
+                    .addComponent(txtjmlAC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel59)
+                    .addComponent(txtjmlkondisiAC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(AC_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel62)
+                    .addGroup(AC_ruangLayout.createSequentialGroup()
+                        .addComponent(cbAC5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbAC6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbAC7)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtposisiAC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(39, Short.MAX_VALUE))
+        );
+
+        sarana.add(AC_ruang, "card6");
+
+        SSID.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel68.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel68.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel68.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel68.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel68.setText("SSID RUANGAN");
+
+        jLabel69.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel69.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel69.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel69.setText("Pilih SSID");
+
+        jLabel70.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel70.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel70.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel70.setText(":");
+
+        jLabel71.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel71.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel71.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel71.setText(":");
+
+        jLabel72.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel72.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel72.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel72.setText("Login");
+
+        cmbpilihSSID.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        cmbpilihSSID.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pilih", "UMMhotspot", "Lab.Informatika" }));
+
+        rbtnbisa_login.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnbisa_login.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnbisa_login.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnbisa_login.setText("Bisa Login");
+        rbtnbisa_login.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnbisa_loginActionPerformed(evt);
+            }
+        });
+
+        rbtntdkbisa_login.setBackground(new java.awt.Color(102, 102, 102));
+        rbtntdkbisa_login.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtntdkbisa_login.setForeground(new java.awt.Color(255, 255, 255));
+        rbtntdkbisa_login.setText("Tidak Bisa Login");
+        rbtntdkbisa_login.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtntdkbisa_loginActionPerformed(evt);
+            }
+        });
+
+        txtlogin.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout SSIDLayout = new javax.swing.GroupLayout(SSID);
+        SSID.setLayout(SSIDLayout);
+        SSIDLayout.setHorizontalGroup(
+            SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(SSIDLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel72)
+                    .addComponent(jLabel69))
+                .addGap(26, 26, 26)
+                .addGroup(SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel70)
+                    .addComponent(jLabel71))
+                .addGap(26, 26, 26)
+                .addGroup(SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(SSIDLayout.createSequentialGroup()
+                        .addComponent(rbtnbisa_login)
+                        .addGap(39, 39, 39)
+                        .addComponent(rbtntdkbisa_login))
+                    .addComponent(cmbpilihSSID, javax.swing.GroupLayout.PREFERRED_SIZE, 405, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtlogin))
+                .addContainerGap(39, Short.MAX_VALUE))
+            .addComponent(jLabel68, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        SSIDLayout.setVerticalGroup(
+            SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(SSIDLayout.createSequentialGroup()
+                .addComponent(jLabel68)
+                .addGap(33, 33, 33)
+                .addGroup(SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel69)
+                    .addComponent(jLabel70)
+                    .addComponent(cmbpilihSSID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(SSIDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel72)
+                    .addComponent(jLabel71)
+                    .addComponent(rbtnbisa_login)
+                    .addComponent(rbtntdkbisa_login))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtlogin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 115, Short.MAX_VALUE))
+        );
+
+        sarana.add(SSID, "card7");
+
+        CCTV_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel63.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel63.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel63.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel63.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel63.setText("CCTV RUANGAN");
+
+        jLabel64.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel64.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel64.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel64.setText("Jumlah Kondisi Baik CCTV");
+
+        jLabel67.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel67.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel67.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel67.setText("Posisi CCTV");
+
+        cbCCTV5.setBackground(new java.awt.Color(102, 102, 102));
+        cbCCTV5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbCCTV5.setForeground(new java.awt.Color(255, 255, 255));
+        cbCCTV5.setText("Lainnya");
+        cbCCTV5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbCCTV5ActionPerformed(evt);
+            }
+        });
+
+        cbCCTV8.setBackground(new java.awt.Color(102, 102, 102));
+        cbCCTV8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        cbCCTV8.setForeground(new java.awt.Color(255, 255, 255));
+        cbCCTV8.setText("Didepan dan Belakang Ruang");
+        cbCCTV8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbCCTV8ActionPerformed(evt);
+            }
+        });
+
+        jLabel84.setBackground(new java.awt.Color(102, 102, 102));
+        jLabel84.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel84.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel84.setText("Jumlah CCTV");
+
+        txtjmlCCTV.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtjmlkondisiCCTV.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtposisiCCTV.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout CCTV_ruangLayout = new javax.swing.GroupLayout(CCTV_ruang);
+        CCTV_ruang.setLayout(CCTV_ruangLayout);
+        CCTV_ruangLayout.setHorizontalGroup(
+            CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CCTV_ruangLayout.createSequentialGroup()
+                .addGap(10, 10, 10)
+                .addComponent(jLabel63, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+            .addGroup(CCTV_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel84)
+                    .addComponent(jLabel64)
+                    .addComponent(jLabel67))
+                .addGap(12, 12, 12)
+                .addGroup(CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(cbCCTV5)
+                    .addComponent(cbCCTV8)
+                    .addComponent(txtjmlkondisiCCTV, javax.swing.GroupLayout.DEFAULT_SIZE, 338, Short.MAX_VALUE)
+                    .addComponent(txtjmlCCTV)
+                    .addComponent(txtposisiCCTV))
+                .addGap(37, 37, 37))
+        );
+        CCTV_ruangLayout.setVerticalGroup(
+            CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CCTV_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel63)
+                .addGap(18, 18, 18)
+                .addGroup(CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel84)
+                    .addComponent(txtjmlCCTV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel64)
+                    .addComponent(txtjmlkondisiCCTV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(CCTV_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel67)
+                    .addComponent(cbCCTV8))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cbCCTV5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtposisiCCTV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(64, Short.MAX_VALUE))
+        );
+
+        sarana.add(CCTV_ruang, "card8");
+
+        javax.swing.GroupLayout sarana_ruangLayout = new javax.swing.GroupLayout(sarana_ruang);
+        sarana_ruang.setLayout(sarana_ruangLayout);
+        sarana_ruangLayout.setHorizontalGroup(
+            sarana_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(sarana, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(sarana_ruangLayout.createSequentialGroup()
+                .addComponent(jLabel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        sarana_ruangLayout.setVerticalGroup(
+            sarana_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(sarana_ruangLayout.createSequentialGroup()
+                .addGap(6, 6, 6)
+                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(sarana, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        InventarisKampus.add(sarana_ruang, "card5");
+
+        lingkungan_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel13.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel13.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel13.setText("LINGKUNGAN RUANG KELAS");
+
+        jLabel14.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel14.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel14.setText("Kondisi Lantai");
+
+        jLabel15.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel15.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel15.setText("Kondisi Dinding");
+
+        jLabel16.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel16.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel16.setText("Kondisi Atap");
+
+        jLabel17.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel17.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel17.setText("Kondisi Pintu");
+
+        jLabel18.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel18.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel18.setText("Kondisi Jendela");
+
+        jLabel19.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel19.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel19.setText("Kondisi Kaca");
+
+        rbtnlingkungan1.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan1.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan1.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan1.setText("Sangat Bersih");
+        rbtnlingkungan1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan1ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan13.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan13.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan13.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan13.setText("Kotor");
+        rbtnlingkungan13.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan13ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan2.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan2.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan2.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan2.setText("Sangat Bersih");
+        rbtnlingkungan2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan2ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan14.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan14.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan14.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan14.setText("Kotor");
+        rbtnlingkungan14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan14ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan3.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan3.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan3.setText("Sangat Bersih");
+        rbtnlingkungan3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan3ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan15.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan15.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan15.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan15.setText("Kotor");
+        rbtnlingkungan15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan15ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan4.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan4.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan4.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan4.setText("Sangat Bersih");
+        rbtnlingkungan4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan4ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan16.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan16.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan16.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan16.setText("Kotor");
+        rbtnlingkungan16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan16ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan5.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan5.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan5.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan5.setText("Sangat Bersih");
+        rbtnlingkungan5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan5ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan17.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan17.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan17.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan17.setText("Kotor");
+        rbtnlingkungan17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan17ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan6.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan6.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan6.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan6.setText("Sangat Bersih");
+        rbtnlingkungan6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan6ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan18.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan18.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan18.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan18.setText("Kotor");
+        rbtnlingkungan18.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan18ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan7.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan7.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan7.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan7.setText("Cukup Bersih");
+        rbtnlingkungan7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan7ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan8.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan8.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan8.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan8.setText("Cukup Bersih");
+        rbtnlingkungan8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan8ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan9.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan9.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan9.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan9.setText("Cukup Bersih");
+        rbtnlingkungan9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan9ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan10.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan10.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan10.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan10.setText("Cukup Bersih");
+        rbtnlingkungan10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan10ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan11.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan11.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan11.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan11.setText("Cukup Bersih");
+        rbtnlingkungan11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan11ActionPerformed(evt);
+            }
+        });
+
+        rbtnlingkungan12.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnlingkungan12.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        rbtnlingkungan12.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnlingkungan12.setText("Cukup Bersih");
+        rbtnlingkungan12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnlingkungan12ActionPerformed(evt);
+            }
+        });
+
+        txtkondisilantai.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkondisidinding.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkondisiatap.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkondisipintu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkondisijendela.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkondisikaca.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout lingkungan_ruangLayout = new javax.swing.GroupLayout(lingkungan_ruang);
+        lingkungan_ruang.setLayout(lingkungan_ruangLayout);
+        lingkungan_ruangLayout.setHorizontalGroup(
+            lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel19)
+                            .addComponent(jLabel18)
+                            .addComponent(jLabel17)
+                            .addComponent(jLabel16)
+                            .addComponent(jLabel15)
+                            .addComponent(jLabel14))
+                        .addGap(18, 18, 18)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(rbtnlingkungan4)
+                            .addComponent(rbtnlingkungan1)
+                            .addComponent(rbtnlingkungan2)
+                            .addComponent(rbtnlingkungan3)
+                            .addComponent(rbtnlingkungan5)
+                            .addComponent(rbtnlingkungan6))
+                        .addGap(10, 10, 10)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(rbtnlingkungan8)
+                            .addComponent(rbtnlingkungan7)
+                            .addComponent(rbtnlingkungan9)
+                            .addComponent(rbtnlingkungan10)
+                            .addComponent(rbtnlingkungan11)
+                            .addComponent(rbtnlingkungan12))
+                        .addGap(18, 18, 18)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                                .addComponent(rbtnlingkungan14)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtkondisidinding))
+                            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(rbtnlingkungan17)
+                                    .addComponent(rbtnlingkungan18))
+                                .addGap(6, 6, 6)
+                                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtkondisikaca)
+                                    .addComponent(txtkondisijendela)))
+                            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(rbtnlingkungan16)
+                                    .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                                        .addComponent(rbtnlingkungan13, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(txtkondisilantai, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 3, Short.MAX_VALUE))
+                            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                                .addComponent(rbtnlingkungan15)
+                                .addGap(6, 6, 6)
+                                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtkondisiatap)
+                                    .addComponent(txtkondisipintu))))))
+                .addContainerGap())
+        );
+        lingkungan_ruangLayout.setVerticalGroup(
+            lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                        .addGap(198, 198, 198)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(rbtnlingkungan6)
+                            .addComponent(rbtnlingkungan18)
+                            .addComponent(txtkondisikaca, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(rbtnlingkungan12)
+                            .addComponent(jLabel19, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(lingkungan_ruangLayout.createSequentialGroup()
+                        .addGap(38, 38, 38)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel15)
+                            .addComponent(rbtnlingkungan2)
+                            .addComponent(rbtnlingkungan14)
+                            .addComponent(txtkondisidinding, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(rbtnlingkungan8))
+                        .addGap(15, 15, 15)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel16)
+                            .addComponent(rbtnlingkungan3)
+                            .addComponent(rbtnlingkungan9)
+                            .addComponent(rbtnlingkungan15)
+                            .addComponent(txtkondisiatap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(15, 15, 15)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel17)
+                            .addComponent(rbtnlingkungan4)
+                            .addComponent(rbtnlingkungan10)
+                            .addComponent(rbtnlingkungan16)
+                            .addComponent(txtkondisipintu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(15, 15, 15)
+                        .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel18)
+                            .addComponent(rbtnlingkungan5)
+                            .addComponent(rbtnlingkungan11)
+                            .addComponent(rbtnlingkungan17)
+                            .addComponent(txtkondisijendela, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(lingkungan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(rbtnlingkungan1)
+                        .addComponent(jLabel14)
+                        .addComponent(rbtnlingkungan7)
+                        .addComponent(rbtnlingkungan13)
+                        .addComponent(txtkondisilantai, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(31, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(lingkungan_ruang, "card6");
+
+        kebersihan_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel20.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel20.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel20.setText("KEBERSIHAN RUANG KELAS");
+
+        jLabel21.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel21.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel21.setText("Sirkulasi Udara");
+
+        jLabel22.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel22.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel22.setText("Nilai Pencahayaan");
+
+        jLabel23.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel23.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel23.setText("Kelembapan");
+
+        jLabel24.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel24.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel24.setText("Suhu");
+
+        rbtnkebersihan1.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkebersihan1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkebersihan1.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkebersihan1.setText("Lancar");
+        rbtnkebersihan1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkebersihan1ActionPerformed(evt);
+            }
+        });
+
+        rbtnkebersihan2.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkebersihan2.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkebersihan2.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkebersihan2.setText("Tidak Lancar");
+        rbtnkebersihan2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkebersihan2ActionPerformed(evt);
+            }
+        });
+
+        jLabel25.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel25.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel25.setText("%");
+
+        jLabel26.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel26.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel26.setText("Celcius");
+
+        javax.swing.GroupLayout kebersihan_ruangLayout = new javax.swing.GroupLayout(kebersihan_ruang);
+        kebersihan_ruang.setLayout(kebersihan_ruangLayout);
+        kebersihan_ruangLayout.setHorizontalGroup(
+            kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel20, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                        .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel21)
+                            .addComponent(jLabel22)
+                            .addComponent(jLabel23)
+                            .addComponent(jLabel24))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                                .addComponent(rbtnkebersihan1)
+                                .addGap(53, 53, 53)
+                                .addComponent(rbtnkebersihan2))
+                            .addComponent(s_kelembapan, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                            .addComponent(s_nilaipencahayaan, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(s_suhu, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(txtnilaipencahayaan, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE)
+                                    .addComponent(txtkelembapan)
+                                    .addComponent(txtsirkulasiudara))
+                                .addGap(3, 3, 3)
+                                .addComponent(jLabel25)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                                .addComponent(txtsuhu, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel26)))))
+                .addContainerGap())
+        );
+        kebersihan_ruangLayout.setVerticalGroup(
+            kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kebersihan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel20, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel21)
+                    .addComponent(rbtnkebersihan1)
+                    .addComponent(rbtnkebersihan2)
+                    .addComponent(txtsirkulasiudara, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel22)
+                    .addComponent(s_nilaipencahayaan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtnilaipencahayaan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel23)
+                    .addComponent(s_kelembapan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtkelembapan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel25)))
+                .addGap(18, 18, 18)
+                .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel24)
+                    .addComponent(s_suhu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(kebersihan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtsuhu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel26)))
+                .addContainerGap(87, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(kebersihan_ruang, "card7");
+
+        kenyamanan_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel27.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel27.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel27.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel27.setText("KENYAMANAN RUANG KELAS");
+
+        jLabel28.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel28.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel28.setText("Kebisingan Ruang");
+
+        jLabel29.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel29.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel29.setText("Bau Ruang");
+
+        jLabel30.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel30.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel30.setText("Kebocoran Ruang");
+
+        jLabel31.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel31.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel31.setText("Kerusakan Ruang");
+
+        jLabel32.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel32.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel32.setText("Keausan Ruang");
+
+        rbtnkenyamanan1.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan1.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan1.setText("Bising");
+        rbtnkenyamanan1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan1ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan6.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan6.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan6.setText("Tidak Bising");
+        rbtnkenyamanan6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan6ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan2.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan2.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan2.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan2.setText("Bau");
+        rbtnkenyamanan2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan2ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan7.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan7.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan7.setText("Tidak Bau");
+        rbtnkenyamanan7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan7ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan3.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan3.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan3.setText("Bocor");
+        rbtnkenyamanan3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan3ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan8.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan8.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan8.setText("Tidak Bocor");
+        rbtnkenyamanan8.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan8ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan4.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan4.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan4.setText("Rusak");
+        rbtnkenyamanan4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan4ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan9.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan9.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan9.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan9.setText("Tidak Rusak");
+        rbtnkenyamanan9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan9ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan5.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan5.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan5.setText("Aus");
+        rbtnkenyamanan5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan5ActionPerformed(evt);
+            }
+        });
+
+        rbtnkenyamanan10.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkenyamanan10.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkenyamanan10.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkenyamanan10.setText("Tidak Aus");
+        rbtnkenyamanan10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkenyamanan10ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout kenyamanan_ruangLayout = new javax.swing.GroupLayout(kenyamanan_ruang);
+        kenyamanan_ruang.setLayout(kenyamanan_ruangLayout);
+        kenyamanan_ruangLayout.setHorizontalGroup(
+            kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kenyamanan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel27, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE)
+                    .addGroup(kenyamanan_ruangLayout.createSequentialGroup()
+                        .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel28)
+                            .addComponent(jLabel29)
+                            .addComponent(jLabel30)
+                            .addComponent(jLabel31)
+                            .addComponent(jLabel32))
+                        .addGap(48, 48, 48)
+                        .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(rbtnkenyamanan2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(rbtnkenyamanan1, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addComponent(rbtnkenyamanan3)
+                            .addComponent(rbtnkenyamanan5)
+                            .addComponent(rbtnkenyamanan4))
+                        .addGap(57, 57, 57)
+                        .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(rbtnkenyamanan6)
+                            .addComponent(rbtnkenyamanan10)
+                            .addComponent(rbtnkenyamanan8)
+                            .addComponent(rbtnkenyamanan7)
+                            .addComponent(rbtnkenyamanan9))
+                        .addGap(27, 27, 27)
+                        .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtkebisingan)
+                            .addComponent(txtbau)
+                            .addComponent(txtkebocoran)
+                            .addComponent(txtkerusakan)
+                            .addComponent(txtkeausan))))
+                .addContainerGap())
+        );
+        kenyamanan_ruangLayout.setVerticalGroup(
+            kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(kenyamanan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel27, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel28)
+                    .addComponent(rbtnkenyamanan1)
+                    .addComponent(rbtnkenyamanan6)
+                    .addComponent(txtkebisingan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel29)
+                    .addComponent(rbtnkenyamanan2)
+                    .addComponent(rbtnkenyamanan7)
+                    .addComponent(txtbau, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel30)
+                    .addComponent(rbtnkenyamanan3)
+                    .addComponent(rbtnkenyamanan8)
+                    .addComponent(txtkebocoran, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel31)
+                    .addComponent(rbtnkenyamanan4)
+                    .addComponent(rbtnkenyamanan9)
+                    .addComponent(txtkerusakan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(kenyamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel32)
+                    .addComponent(rbtnkenyamanan5)
+                    .addComponent(rbtnkenyamanan10)
+                    .addComponent(txtkeausan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(38, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(kenyamanan_ruang, "card8");
+
+        keamanan_ruang.setBackground(new java.awt.Color(102, 102, 102));
+
+        jLabel33.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel33.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel33.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel33.setText("KEAMANAN RUANG KELAS");
+
+        jLabel34.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel34.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel34.setText("Kekokohan Ruang");
+
+        jLabel35.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel35.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel35.setText("Jumlah Kunci Pintu");
+
+        jLabel36.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel36.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel36.setText("Jumlah Kunci Jendela");
+
+        jLabel37.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel37.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel37.setText("Bahaya Ruang");
+
+        rbtnkeamanan1.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkeamanan1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkeamanan1.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkeamanan1.setText("Kokoh");
+        rbtnkeamanan1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkeamanan1ActionPerformed(evt);
+            }
+        });
+
+        rbtnkeamanan4.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkeamanan4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkeamanan4.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkeamanan4.setText("Tidak Bahaya");
+        rbtnkeamanan4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkeamanan4ActionPerformed(evt);
+            }
+        });
+
+        txtkuncipintu.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        txtkuncijendela.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
+        rbtnkeamanan2.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkeamanan2.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkeamanan2.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkeamanan2.setText("Tidak Kokoh");
+        rbtnkeamanan2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkeamanan2ActionPerformed(evt);
+            }
+        });
+
+        rbtnkeamanan3.setBackground(new java.awt.Color(102, 102, 102));
+        rbtnkeamanan3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        rbtnkeamanan3.setForeground(new java.awt.Color(255, 255, 255));
+        rbtnkeamanan3.setText("Bahaya");
+        rbtnkeamanan3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbtnkeamanan3ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout keamanan_ruangLayout = new javax.swing.GroupLayout(keamanan_ruang);
+        keamanan_ruang.setLayout(keamanan_ruangLayout);
+        keamanan_ruangLayout.setHorizontalGroup(
+            keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                        .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel34)
+                            .addComponent(jLabel37)
+                            .addComponent(jLabel35))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 53, Short.MAX_VALUE)
+                        .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtkuncipintu, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                                .addComponent(rbtnkeamanan1)
+                                .addGap(37, 37, 37)
+                                .addComponent(rbtnkeamanan2)
+                                .addGap(18, 18, 18)
+                                .addComponent(txtkekokohan))))
+                    .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                        .addComponent(jLabel36)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jLabel33, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, keamanan_ruangLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                                .addComponent(rbtnkeamanan3)
+                                .addGap(30, 30, 30)
+                                .addComponent(rbtnkeamanan4)
+                                .addGap(18, 18, 18)
+                                .addComponent(txtbahaya))
+                            .addComponent(txtkuncijendela, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap())
+        );
+        keamanan_ruangLayout.setVerticalGroup(
+            keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(keamanan_ruangLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel34)
+                    .addComponent(rbtnkeamanan1)
+                    .addComponent(rbtnkeamanan2)
+                    .addComponent(txtkekokohan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(19, 19, 19)
+                .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel35)
+                    .addComponent(txtkuncipintu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(21, 21, 21)
+                .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel36)
+                    .addComponent(txtkuncijendela, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(20, 20, 20)
+                .addGroup(keamanan_ruangLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel37)
+                    .addComponent(rbtnkeamanan4)
+                    .addComponent(rbtnkeamanan3)
+                    .addComponent(txtbahaya, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(79, Short.MAX_VALUE))
+        );
+
+        InventarisKampus.add(keamanan_ruang, "card9");
+
+        btnnew.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnnew.setText("Baru");
+        btnnew.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnnew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnnewActionPerformed(evt);
+            }
+        });
+
+        btnlihatdata.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnlihatdata.setText("Lihat Data");
+        btnlihatdata.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnlihatdata.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnlihatdataActionPerformed(evt);
+            }
+        });
+
+        btnedit.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnedit.setText("Edit");
+        btnedit.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnedit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btneditActionPerformed(evt);
+            }
+        });
+
+        btndelete.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btndelete.setText("Hapus");
+        btndelete.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btndelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btndeleteActionPerformed(evt);
+            }
+        });
+
+        jButton3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jButton3.setText("Cari");
+        jButton3.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
+        btnreset.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnreset.setText("Reset");
+        btnreset.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnreset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnresetActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout TombolLayout = new javax.swing.GroupLayout(Tombol);
+        Tombol.setLayout(TombolLayout);
+        TombolLayout.setHorizontalGroup(
+            TombolLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TombolLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(btnnew)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnedit)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnreset)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btndelete)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnlihatdata)
+                .addContainerGap())
+        );
+        TombolLayout.setVerticalGroup(
+            TombolLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TombolLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(TombolLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnnew)
+                    .addComponent(btnlihatdata)
+                    .addComponent(btnedit)
+                    .addComponent(btndelete)
+                    .addComponent(jButton3)
+                    .addComponent(btnreset))
+                .addContainerGap(22, Short.MAX_VALUE))
+        );
+
+        btnnext.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnnext.setText(">");
+        btnnext.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnnext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnnextActionPerformed(evt);
+            }
+        });
+
+        btnprevious.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnprevious.setText("<");
+        btnprevious.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnprevious.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnpreviousActionPerformed(evt);
+            }
+        });
+
+        jButton1.setIcon(new javax.swing.ImageIcon("D:\\New folder\\home.jpg")); // NOI18N
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(8, 8, 8)
+                                .addComponent(btnprevious))
+                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(InventarisKampus, javax.swing.GroupLayout.PREFERRED_SIZE, 554, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnnext)
+                        .addGap(0, 10, Short.MAX_VALUE))
+                    .addComponent(Tombol, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jButton1)
+                        .addGap(106, 106, 106)
+                        .addComponent(btnprevious, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(121, 121, 121))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(btnnext, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(117, 117, 117))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(InventarisKampus, javax.swing.GroupLayout.PREFERRED_SIZE, 291, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addComponent(Tombol, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        pack();
+    }// </editor-fold>                        
+
+    private void btnnextActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        if (identitas_ruang.isShowing() && !txtnama.getText().equalsIgnoreCase("") && !txtlokasi.getText().equalsIgnoreCase("") && !cmbfakultas.getSelectedItem().equals("Pilih Fakultas")) {
+            previous_next();
+            kondisi_ruang.setVisible(true);
+            btnprevious.setEnabled(true);
+        }else if(kondisi_ruang.isShowing() && !txtpanjang.getText().equalsIgnoreCase("") && !txtlebar.getText().equalsIgnoreCase("") && !txtjmlkursi.getText().equalsIgnoreCase("") && !txtjmlpintu.getText().equalsIgnoreCase("") && !txtjmljendela.getText().equalsIgnoreCase("")) {
+            previous_next();
+            sarana_ruang.setVisible(true);
+            steker_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && steker_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            kabel_LCD.setVisible(true);
+        }else if(sarana_ruang.isShowing() && kabel_LCD.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            lampu_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && lampu_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            kipas_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && kipas_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            AC_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && AC_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            CCTV_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && CCTV_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            SSID.setVisible(true);
+        }else if(sarana_ruang.isShowing() && SSID.isShowing()){
+            previous_next();
+            lingkungan_ruang.setVisible(true);
+        }else if(lingkungan_ruang.isShowing()){
+            previous_next();
+            kebersihan_ruang.setVisible(true);
+        }else if(kebersihan_ruang.isShowing()){
+            previous_next();
+            kenyamanan_ruang.setVisible(true);
+        }else if(kenyamanan_ruang.isShowing()){
+            previous_next();
+            keamanan_ruang.setVisible(true);
+            btnnext.setEnabled(false);
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "Data Belum Lengkap!!");
+        }
+        
+    }                                       
+
+    private void btnnewActionPerformed(java.awt.event.ActionEvent evt) {                                       
+        //TODO add your handling code here:
+        btnnext.setEnabled(true);
+        btnprevious.setEnabled(false);
+        
+        if (btnnew.getText().equals("Baru")) {
+            previous_next();
+            identitas_ruang.setVisible(true);
+            txtnama.setText("");
+            txtlokasi.setText("");
+            cmbfakultas.setSelectedItem("Pilih Fakultas");
+            txtnama.setEnabled(true);
+            txtlokasi.setEnabled(true);
+            cmbfakultas.setEnabled(true);
+            txtnama.requestFocus();
+            btnnew.setText("Simpan");
+            btnreset.setEnabled(true);
+        } else {
+            if (!txtnama.getText().equals("") && !txtlokasi.getText().equals("") && !cmbfakultas.getSelectedItem().equals("Pilih Fakultas") && !txtpanjang.getText().equals("") && !txtlebar.getText().equals("") && !txtjmlkursi.getText().equals("") && !txtjmlpintu.getText().equals("") && !txtjmljendela.getText().equals("")) {
+                Koneksi konek = new Koneksi(); //buka koneksi 
+                Model m = new Model();
+                Model nk;
+                Model call1 = new Model();
+                m.setNama_ruang(txtnama.getText());
+                m.setLokasi_ruang(txtlokasi.getText());
+                m.setFakultas((String) cmbfakultas.getSelectedItem());
+                m.setPanjang_ruang(Double.parseDouble(txtpanjang.getText()));
+                m.setLebar_ruang(Double.parseDouble(txtlebar.getText()));
+                m.setJml_kursi(Integer.parseInt(txtjmlkursi.getText()));
+                m.setJml_pintu(Integer.parseInt(txtjmlpintu.getText()));
+                m.setJml_jendela(Integer.parseInt(txtjmljendela.getText()));
+                m.setJml_steker(Integer.parseInt(txtjmlsteker.getText()));
+                m.setJml_baik_steker(Integer.parseInt(txtjmlsteker.getText()));
+                m.setPosisi_steker(txtposisisteker.getText());
+                m.setJml_kabel_LCD(Integer.parseInt(txtjmlLCD.getText()));
+                m.setJml_baik_LCD(Integer.parseInt(txtjmlkondisiLCD.getText()));
+                m.setPosisi_kabel_LCD(txtposisiLCD.getText());
+                m.setJml_lampu(Integer.parseInt(txtjmllampu.getText()));
+                m.setJml_baik_lampu(Integer.parseInt(txtjmlkondisilampu.getText()));
+                m.setPosisi_lampu(txtposisilampu.getText());
+                m.setJml_kipas(Integer.parseInt(txtjmlkondisikipas.getText()));
+                m.setJml_baik_kipas(Integer.parseInt(txtjmlkondisikipas.getText()));
+                m.setPosisi_kipas(txtposisikipas.getText());
+                m.setJml_AC(Integer.parseInt(txtjmlAC.getText()));
+                m.setJml_baik_AC(Integer.parseInt(txtjmlkondisiAC.getText()));
+                m.setPosisi_AC(txtposisiAC.getText());
+                m.setJml_CCTV(Integer.parseInt(txtjmlCCTV.getText()));
+                m.setJml_baik_CCTV(Integer.parseInt(txtjmlkondisiCCTV.getText()));
+                m.setPosisi_CCTV(txtposisiCCTV.getText());
+                m.setSSID((String) cmbpilihSSID.getSelectedItem());
+                m.setLogin(txtlogin.getText());
+                m.setKondisi_lantai(txtkondisilantai.getText());
+                m.setKondisi_dinding(txtkondisidinding.getText());
+                m.setKondisi_atap(txtkondisiatap.getText());
+                m.setKondisi_pintu(txtkondisipintu.getText());
+                m.setKondisi_jendela(txtkondisijendela.getText());
+                m.setKondisi_kaca_jendela(txtkondisikaca.getText());
+                m.setSirkulasi_udara(txtsirkulasiudara.getText());
+                m.setNilai_pencahayaan(Double.parseDouble(txtnilaipencahayaan.getText()));
+                m.setKelembapan(Double.parseDouble(txtkelembapan.getText()));
+                m.setSuhu(Double.parseDouble(txtsuhu.getText()));
+                m.setKebisingan(txtkebisingan.getText());
+                m.setBau(txtbau.getText());
+                m.setKebocoran(txtkebocoran.getText());
+                m.setKerusakan(txtkerusakan.getText());
+                m.setKeausan(txtkeausan.getText());
+                m.setKekokohan(txtkekokohan.getText());
+                m.setJml_kunci_pintu(Integer.parseInt(txtjmlpintu.getText()));
+                m.setJml_kunci_jendela(Integer.parseInt(txtjmljendela.getText()));
+                m.setBahaya(txtbahaya.getText());
+                if (konek.Insert(m) > 0) {
+                    loadData();
+                    currentRow = inventaris.size() - 1;
+                    bindData();
+                    identitas_ruang.setVisible(false);
+                    data.setVisible(true);
+                    tbldata.setVisible(true);
+                    JOptionPane.showMessageDialog(this, "Data berhasil disimpan", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Data gagal disimpan", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+                }
+                txtnama.setEditable(false);
+                txtlokasi.setEditable(false);
+                cmbfakultas.setEditable(false);
+                btnnew.setText("Baru");
+                konek.closeConnection(); //tutup koneksi 
+            } else {
+                JOptionPane.showMessageDialog(this, "Mohon isi data dengan benar", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+        tampilkandata();
+    }                                      
+
+    private void btnlihatdataActionPerformed(java.awt.event.ActionEvent evt) {                                             
+        // TODO add your handling code here:
+        previous_next();
+        data.setVisible(true);
+        btnnext.setEnabled(false);
+        btnprevious.setEnabled(false);
+    }                                            
+
+    private void btndeleteActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+            int dialog = JOptionPane.showConfirmDialog(this,
+                    "Apakah Anda yakin akan menghapus data ini?",
+                    "Konfirmasi", JOptionPane.YES_NO_OPTION);
+            Koneksi konek = new Koneksi(); //buka koneksi 
+            Model m = inventaris.get(currentRow);
+            if (dialog == JOptionPane.YES_OPTION) {
+                if (konek.Delete(m) > 0) {
+                    loadData();
+                    //currentRow = currentRow - 1;
+                    bindData();
+                    tampilkandata();
+                    JOptionPane.showMessageDialog(this, "Data berhasil dihapus", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Data gagal dihapus", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+            konek.closeConnection(); //tutup koneksi 
+    }                                         
+
+    private void btnresetActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        txtnama.setText("");
+        txtlokasi.setText("");
+        cmbfakultas.setSelectedItem("Pilih Fakultas");
+        txtpanjang.setText("");
+        txtlebar.setText("");
+        txtjmlkursi.setText("");
+        txtjmlpintu.setText("");
+        txtjmljendela.setText("");
+        txtjmlsteker.setText("");
+        txtjmlkondisisteker.setText("");
+        cbsteker5.setSelected(false);
+        cbsteker6.setSelected(false);
+        cbsteker7.setSelected(false);
+        cbsteker8.setSelected(false);
+        cbsteker9.setSelected(false);
+        cbsteker10.setSelected(false);
+        txtposisisteker.setText("");
+        txtjmlLCD.setText("");
+        txtjmlkondisiLCD.setText("");
+        cbLCD3.setSelected(false);
+        cbLCD4.setSelected(false);
+        txtposisiLCD.setText("");
+        txtjmllampu.setText("");
+        txtjmlkondisilampu.setText("");
+        cblampu5.setSelected(false);
+        cblampu6.setSelected(false);
+        txtposisilampu.setText("");
+        txtjmlkipas.setText("");
+        txtjmlkondisikipas.setText("");
+        cbkipas5.setSelected(false);
+        cbkipas6.setSelected(false);
+        txtposisikipas.setText("");
+        txtjmlAC.setText("");
+        txtjmlkondisiAC.setText("");
+        cbAC5.setSelected(false);
+        cbAC6.setSelected(false);
+        cbAC7.setSelected(false);
+        txtposisiAC.setText("");
+        txtjmlCCTV.setText("");
+        txtjmlkondisiCCTV.setText("");
+        cbCCTV5.setSelected(false);
+        cbCCTV8.setSelected(false);
+        txtposisiCCTV.setText("");
+        cmbpilihSSID.setSelectedItem("Pilih");
+        rbtnbisa_login.setSelected(false);
+        rbtntdkbisa_login.setSelected(false);
+        rbtnlingkungan1.setSelected(false);
+        rbtnlingkungan2.setSelected(false);
+        rbtnlingkungan3.setSelected(false);
+        rbtnlingkungan4.setSelected(false);
+        rbtnlingkungan5.setSelected(false);
+        rbtnlingkungan6.setSelected(false);
+        rbtnlingkungan7.setSelected(false);
+        rbtnlingkungan8.setSelected(false);
+        rbtnlingkungan9.setSelected(false);
+        rbtnlingkungan10.setSelected(false);
+        rbtnlingkungan11.setSelected(false);
+        rbtnlingkungan12.setSelected(false);
+        rbtnlingkungan13.setSelected(false);
+        rbtnlingkungan14.setSelected(false);
+        rbtnlingkungan15.setSelected(false);
+        rbtnlingkungan16.setSelected(false);
+        rbtnlingkungan17.setSelected(false);
+        rbtnlingkungan18.setSelected(false);
+        rbtnkebersihan1.setSelected(false);
+        rbtnkebersihan2.setSelected(false);
+        txtnilaipencahayaan.setText("");
+        txtkelembapan.setText("");
+        txtsuhu.setText("");
+        rbtnkenyamanan1.setSelected(false);
+        rbtnkenyamanan2.setSelected(false);
+        rbtnkenyamanan3.setSelected(false);
+        rbtnkenyamanan4.setSelected(false);
+        rbtnkenyamanan5.setSelected(false);
+        rbtnkenyamanan6.setSelected(false);
+        rbtnkenyamanan7.setSelected(false);
+        rbtnkenyamanan8.setSelected(false);
+        rbtnkenyamanan9.setSelected(false);
+        rbtnkenyamanan10.setSelected(false);
+        rbtnkeamanan1.setSelected(false);
+        rbtnkeamanan2.setSelected(false);
+        rbtnkeamanan3.setSelected(false);
+        rbtnkeamanan4.setSelected(false);
+        txtkekokohan.setText("");
+    }                                        
+
+    private void btnpreviousActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        if(kondisi_ruang.isShowing()){
+            previous_next();
+            identitas_ruang.setVisible(true);
+            btnprevious.setEnabled(false);
+        }else if(sarana_ruang.isShowing() && steker_ruang.isShowing()){
+            previous_next();
+            kondisi_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && kabel_LCD.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            steker_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && lampu_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            kabel_LCD.setVisible(true);
+        }else if(sarana_ruang.isShowing() && kipas_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            lampu_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && AC_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            kipas_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && CCTV_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            AC_ruang.setVisible(true);
+        }else if(sarana_ruang.isShowing() && SSID.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            CCTV_ruang.setVisible(true);
+        }else if(lingkungan_ruang.isShowing()){
+            previous_next();
+            sarana_ruang.setVisible(true);
+            SSID.setVisible(true);
+        }else if(kebersihan_ruang.isShowing()){
+            previous_next();
+            lingkungan_ruang.setVisible(true);
+        }else if(kenyamanan_ruang.isShowing()){
+            previous_next();
+            kebersihan_ruang.setVisible(true);
+        }else if(keamanan_ruang.isShowing()){
+            previous_next();
+            kenyamanan_ruang.setVisible(true);
+        }
+    }                                           
+
+    private void btneditActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+         if (btnedit.getText().equals("Ubah")) {
+            txtnama.setEditable(true);
+            txtlokasi.setEditable(true);
+            cmbfakultas.setEditable(true);
+            txtpanjang.setEditable(true);
+            txtlebar.setEditable(true);
+            txtjmlkursi.setEditable(true);
+            txtjmlpintu.setEditable(true);
+            txtjmljendela.setEditable(true);
+            txtjmlsteker.setEditable(true);
+            txtjmlkondisisteker.setEditable(true);
+            txtposisisteker.setEditable(true);
+            txtjmlLCD.setEditable(true);
+            txtjmlkondisiLCD.setEditable(true);
+            txtposisiLCD.setEditable(true);
+            txtjmllampu.setEditable(true);
+            txtjmlkondisilampu.setEditable(true);
+            txtposisilampu.setEditable(true);
+            txtjmlkipas.setEditable(true);
+            txtjmlkondisikipas.setEditable(true);
+            txtposisikipas.setEditable(true);
+            txtjmlAC.setEditable(true);
+            txtjmlkondisiAC.setEditable(true);
+            txtposisiAC.setEditable(true);
+            txtjmlCCTV.setEditable(true);
+            txtjmlkondisiCCTV.setEditable(true);
+            txtposisiCCTV.setEditable(true);
+            txtlogin.setEditable(true);
+            cmbpilihSSID.setEditable(true);
+            txtkondisilantai.setEditable(true);
+            txtkondisidinding.setEditable(true);
+            txtkondisiatap.setEditable(true);
+            txtkondisipintu.setEditable(true);
+            txtkondisijendela.setEditable(true);
+            txtkondisikaca.setEditable(true);
+            txtsirkulasiudara.setEditable(true);
+            txtnilaipencahayaan.setEditable(true);
+            txtkelembapan.setEditable(true);
+            txtsuhu.setEditable(true);
+            txtkebisingan.setEditable(true);
+            txtbau.setEditable(true);
+            txtkebocoran.setEditable(true);
+            txtkerusakan.setEditable(true);
+            txtkeausan.setEditable(true);
+            txtkekokohan.setEditable(true);
+            txtkuncipintu.setEditable(true);
+            txtkuncijendela.setEditable(true);
+            txtbahaya.setEditable(true);            
+            btnedit.setText("Simpan");
+            btndelete.setText("Batal");
+            btnnew.setEnabled(false);
+            btnprevious.setEnabled(false);
+            btnnext.setEnabled(false);
+        } else {
+            Koneksi konek = new Koneksi();
+            Model m = inventaris.get(currentRow);
+            m.setNama_ruang(txtnama.getText());
+            m.setLokasi_ruang(txtlokasi.getText());
+            m.setFakultas((String) cmbfakultas.getSelectedItem());
+            m.setPanjang_ruang(Double.parseDouble(txtpanjang.getText()));
+            m.setLebar_ruang(Double.parseDouble(txtlebar.getText()));
+            m.setJml_kursi(Integer.parseInt(txtjmlkursi.getText()));
+            m.setJml_pintu(Integer.parseInt(txtjmlpintu.getText()));
+            m.setJml_jendela(Integer.parseInt(txtjmljendela.getText()));
+            m.setJml_steker(Integer.parseInt(txtjmlsteker.getText()));
+            m.setJml_baik_steker(Integer.parseInt(txtjmlkondisisteker.getText()));
+            m.setPosisi_steker(txtposisisteker.getText());
+            m.setJml_kabel_LCD(Integer.parseInt(txtjmlLCD.getText()));
+            m.setJml_baik_LCD(Integer.parseInt(txtjmlkondisiLCD.getText()));
+            m.setPosisi_kabel_LCD(txtposisiLCD.getText());
+            m.setJml_lampu(Integer.parseInt(txtjmljendela.getText()));
+            m.setJml_baik_lampu(Integer.parseInt(txtjmlkondisilampu.getText()));
+            m.setPosisi_lampu(txtposisilampu.getText());
+            m.setJml_kipas(Integer.parseInt(txtjmlkipas.getText()));
+            m.setJml_baik_kipas(Integer.parseInt(txtjmlkondisikipas.getText()));
+            m.setPosisi_kipas(txtposisikipas.getText());
+            m.setJml_AC(Integer.parseInt(txtjmlAC.getText()));
+            m.setJml_baik_AC(Integer.parseInt(txtjmlkondisiAC.getText()));
+            m.setPosisi_AC(txtposisiAC.getText());
+            m.setJml_CCTV(Integer.parseInt(txtjmlCCTV.getText()));
+            m.setJml_baik_CCTV(Integer.parseInt(txtjmlkondisiCCTV.getText()));
+            m.setPosisi_CCTV(txtposisiCCTV.getText());
+            m.setSSID((String) cmbpilihSSID.getSelectedItem());
+            m.setLogin(txtlogin.getText());
+            m.setKondisi_lantai(txtkondisilantai.getText());
+            m.setKondisi_dinding(txtkondisidinding.getText());
+            m.setKondisi_atap(txtkondisiatap.getText());
+            m.setKondisi_pintu(txtkondisipintu.getText());
+            m.setKondisi_jendela(txtkondisijendela.getText());
+            m.setKondisi_kaca_jendela(txtkondisikaca.getText());
+            m.setSirkulasi_udara(txtsirkulasiudara.getText());
+            m.setNilai_pencahayaan(Double.parseDouble(txtnilaipencahayaan.getText()));
+            m.setKelembapan(Double.parseDouble(txtkelembapan.getText()));
+            m.setSuhu(Double.parseDouble(txtsuhu.getText()));
+            m.setKebisingan(txtkebisingan.getText());
+            m.setBau(txtbau.getText());
+            m.setKebocoran(txtkebocoran.getText());
+            m.setKerusakan(txtkerusakan.getText());
+            m.setKeausan(txtkeausan.getText());
+            m.setKekokohan(txtkekokohan.getText());
+            m.setJml_kunci_pintu(Integer.parseInt(txtjmlpintu.getText()));
+            m.setJml_kunci_jendela(Integer.parseInt(txtjmljendela.getText()));
+            m.setBahaya(txtbahaya.getText());
+            if (konek.Update(m) > 0) {
+                loadData();
+                bindData();
+                JOptionPane.showMessageDialog(this, "Data berhasil diupdate", "Information", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Data gagal diupdate", "Information", JOptionPane.INFORMATION_MESSAGE);
+            }
+            txtnama.setEditable(false);
+            txtlokasi.setEditable(false);
+            cmbfakultas.setEditable(false);
+            btnedit.setText("Ubah");
+            btndelete.setText("Hapus");
+            btnnew.setEnabled(true);
+            btnprevious.setEnabled(true);
+            btnnext.setEnabled(true);
+        }
+        tampilkandata();
+    }                                       
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+     
+    }                                        
+
+    private void cbsteker5ActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        txtposisisteker.setText("Dipojok Ruang");
+    }                                         
+
+    private void cbsteker6ActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        txtposisisteker.setText("Dipojok Dekat Pintu");
+    }                                         
+
+    private void cbsteker7ActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        txtposisisteker.setText("Dipojok Ruang dan Dekat Dosen");
+    }                                         
+
+    private void cbsteker8ActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        txtposisisteker.setText("Didepan Ruang");
+    }                                         
+
+    private void cbsteker9ActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // TODO add your handling code here:
+        txtposisisteker.setText("Disamping Ruang");
+    }                                         
+
+    private void cbsteker10ActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        // TODO add your handling code here:
+        txtposisisteker.setText("Dibelakang Ruang");
+    }                                          
+
+    private void cbLCD3ActionPerformed(java.awt.event.ActionEvent evt) {                                       
+        // TODO add your handling code here:
+        txtposisiLCD.setText("Dekat Dosen");
+    }                                      
+
+    private void cbLCD4ActionPerformed(java.awt.event.ActionEvent evt) {                                       
+        // TODO add your handling code here:
+        txtposisiLCD.setText("Dekat Pintu");
+    }                                      
+
+    private void cblampu5ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        txtposisilampu.setText("Diatap Ruang");
+    }                                        
+
+    private void cblampu6ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        txtposisilampu.setText("Dipojok Ruang");
+    }                                        
+
+    private void cbkipas5ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        txtposisikipas.setText("Diatap Ruang");
+    }                                        
+
+    private void cbkipas6ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        txtposisikipas.setText("Lainnya");
+    }                                        
+
+    private void cbAC5ActionPerformed(java.awt.event.ActionEvent evt) {                                      
+        // TODO add your handling code here:
+        txtposisiAC.setText("Didepan Ruang");
+    }                                     
+
+    private void cbAC6ActionPerformed(java.awt.event.ActionEvent evt) {                                      
+        // TODO add your handling code here:
+        txtposisiAC.setText("Disamping Ruang");
+    }                                     
+
+    private void cbAC7ActionPerformed(java.awt.event.ActionEvent evt) {                                      
+        // TODO add your handling code here:
+        txtposisiAC.setText("Dibelakang Ruang");
+    }                                     
+
+    private void cbCCTV5ActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+        txtposisiCCTV.setText("Lainnya");
+    }                                       
+
+    private void cbCCTV8ActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        // TODO add your handling code here:
+        txtposisiCCTV.setText("Didepan dan Belakang Ruang");
+    }                                       
+
+    private void rbtnlingkungan1ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisilantai.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan7ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisilantai.setText("Cukup Bersih");
+    }                                               
+
+    private void rbtnlingkungan13ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisilantai.setText("Kotor");
+    }                                                
+
+    private void rbtnlingkungan2ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisidinding.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan8ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisidinding.setText("Cukup Bersih");
+    }                                               
+
+    private void rbtnlingkungan14ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisidinding.setText("Kotor");
+    }                                                
+
+    private void rbtnlingkungan3ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisiatap.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan9ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisiatap.setText("Cukup Bersih");
+    }                                               
+
+    private void rbtnlingkungan15ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisiatap.setText("Kotor");
+    }                                                
+
+    private void rbtnlingkungan4ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisipintu.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan10ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisipintu.setText("Cukup Bersih");
+    }                                                
+
+    private void rbtnlingkungan16ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisipintu.setText("Kotor");
+    }                                                
+
+    private void rbtnlingkungan5ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisijendela.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan11ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisijendela.setText("Cukup Bersih");
+    }                                                
+
+    private void rbtnlingkungan17ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisijendela.setText("Kotor");
+    }                                                
+
+    private void rbtnlingkungan6ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkondisikaca.setText("Sangat Bersih");
+    }                                               
+
+    private void rbtnlingkungan12ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisikaca.setText("Cukup Bersih");
+    }                                                
+
+    private void rbtnlingkungan18ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkondisikaca.setText("Kotor");
+    }                                                
+
+    private void rbtnkebersihan1ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtsirkulasiudara.setText("Lancar");
+    }                                               
+
+    private void rbtnkebersihan2ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtsirkulasiudara.setText("Tidak Lancar");
+    }                                               
+
+    private void rbtnkenyamanan1ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkebisingan.setText("Bising");
+    }                                               
+
+    private void rbtnkenyamanan6ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkebisingan.setText("Tidak Bising");
+    }                                               
+
+    private void rbtnkenyamanan2ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtbau.setText("Bau");
+    }                                               
+
+    private void rbtnkenyamanan7ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtbau.setText("Tidak Bau");
+    }                                               
+
+    private void rbtnkenyamanan3ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkebocoran.setText("Bocor");
+    }                                               
+
+    private void rbtnkenyamanan8ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkebocoran.setText("Tidak Bocor");
+    }                                               
+
+    private void rbtnkenyamanan4ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkerusakan.setText("Rusak");
+    }                                               
+
+    private void rbtnkenyamanan9ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkerusakan.setText("Tidak Rusak");
+    }                                               
+
+    private void rbtnkenyamanan5ActionPerformed(java.awt.event.ActionEvent evt) {                                                
+        // TODO add your handling code here:
+        txtkeausan.setText("Aus");
+    }                                               
+
+    private void rbtnkenyamanan10ActionPerformed(java.awt.event.ActionEvent evt) {                                                 
+        // TODO add your handling code here:
+        txtkeausan.setText("Tidak Aus");
+    }                                                
+
+    private void rbtnkeamanan1ActionPerformed(java.awt.event.ActionEvent evt) {                                              
+        // TODO add your handling code here:
+        txtkekokohan.setText("Kokoh");
+    }                                             
+
+    private void rbtnkeamanan2ActionPerformed(java.awt.event.ActionEvent evt) {                                              
+        // TODO add your handling code here:
+        txtkekokohan.setText("Tidak Kokoh");
+    }                                             
+
+    private void rbtnkeamanan3ActionPerformed(java.awt.event.ActionEvent evt) {                                              
+        // TODO add your handling code here:
+        txtbahaya.setText("Bahaya");
+    }                                             
+
+    private void rbtnkeamanan4ActionPerformed(java.awt.event.ActionEvent evt) {                                              
+        // TODO add your handling code here:
+        txtbahaya.setText("Tidak Bahaya");
+    }                                             
+
+    private void rbtnbisa_loginActionPerformed(java.awt.event.ActionEvent evt) {                                               
+        // TODO add your handling code here:
+        txtlogin.setText("Bisa Login");
+    }                                              
+
+    private void rbtntdkbisa_loginActionPerformed(java.awt.event.ActionEvent evt) {                                                  
+        // TODO add your handling code here:
+        txtbahaya.setText("Tidak Bisa Bahaya");
+    }                                                 
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        this.setVisible(false);
+        new MenuUtama().setVisible(true);
+    }                                        
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(InventarisKampus.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(InventarisKampus.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(InventarisKampus.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(InventarisKampus.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new InventarisKampus().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JPanel AC_ruang;
+    private javax.swing.JPanel CCTV_ruang;
+    static javax.swing.JPanel InventarisKampus;
+    private javax.swing.JPanel SSID;
+    private javax.swing.JPanel Tombol;
+    private javax.swing.JButton btndelete;
+    private javax.swing.JButton btnedit;
+    private javax.swing.JButton btnlihatdata;
+    private javax.swing.JButton btnnew;
+    private javax.swing.JButton btnnext;
+    private javax.swing.JButton btnprevious;
+    private javax.swing.JButton btnreset;
+    private javax.swing.JCheckBox cbAC5;
+    private javax.swing.JCheckBox cbAC6;
+    private javax.swing.JCheckBox cbAC7;
+    private javax.swing.JCheckBox cbCCTV5;
+    private javax.swing.JCheckBox cbCCTV8;
+    private javax.swing.JCheckBox cbLCD3;
+    private javax.swing.JCheckBox cbLCD4;
+    private javax.swing.JCheckBox cbkipas5;
+    private javax.swing.JCheckBox cbkipas6;
+    private javax.swing.JCheckBox cblampu5;
+    private javax.swing.JCheckBox cblampu6;
+    private javax.swing.JCheckBox cbsteker10;
+    private javax.swing.JCheckBox cbsteker5;
+    private javax.swing.JCheckBox cbsteker6;
+    private javax.swing.JCheckBox cbsteker7;
+    private javax.swing.JCheckBox cbsteker8;
+    private javax.swing.JCheckBox cbsteker9;
+    private javax.swing.JComboBox cmbfakultas;
+    private javax.swing.JComboBox cmbpilihSSID;
+    static javax.swing.JPanel data;
+    static javax.swing.JPanel identitas_ruang;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
+    private javax.swing.JLabel jLabel25;
+    private javax.swing.JLabel jLabel26;
+    private javax.swing.JLabel jLabel27;
+    private javax.swing.JLabel jLabel28;
+    private javax.swing.JLabel jLabel29;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel30;
+    private javax.swing.JLabel jLabel31;
+    private javax.swing.JLabel jLabel32;
+    private javax.swing.JLabel jLabel33;
+    private javax.swing.JLabel jLabel34;
+    private javax.swing.JLabel jLabel35;
+    private javax.swing.JLabel jLabel36;
+    private javax.swing.JLabel jLabel37;
+    private javax.swing.JLabel jLabel38;
+    private javax.swing.JLabel jLabel39;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel40;
+    private javax.swing.JLabel jLabel41;
+    private javax.swing.JLabel jLabel43;
+    private javax.swing.JLabel jLabel44;
+    private javax.swing.JLabel jLabel45;
+    private javax.swing.JLabel jLabel48;
+    private javax.swing.JLabel jLabel49;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel52;
+    private javax.swing.JLabel jLabel53;
+    private javax.swing.JLabel jLabel54;
+    private javax.swing.JLabel jLabel57;
+    private javax.swing.JLabel jLabel58;
+    private javax.swing.JLabel jLabel59;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel62;
+    private javax.swing.JLabel jLabel63;
+    private javax.swing.JLabel jLabel64;
+    private javax.swing.JLabel jLabel67;
+    private javax.swing.JLabel jLabel68;
+    private javax.swing.JLabel jLabel69;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel70;
+    private javax.swing.JLabel jLabel71;
+    private javax.swing.JLabel jLabel72;
+    private javax.swing.JLabel jLabel79;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel80;
+    private javax.swing.JLabel jLabel81;
+    private javax.swing.JLabel jLabel82;
+    private javax.swing.JLabel jLabel83;
+    private javax.swing.JLabel jLabel84;
+    private javax.swing.JLabel jLabel9;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPanel kabel_LCD;
+    static javax.swing.JPanel keamanan_ruang;
+    static javax.swing.JPanel kebersihan_ruang;
+    static javax.swing.JPanel kenyamanan_ruang;
+    private javax.swing.JPanel kipas_ruang;
+    static javax.swing.JPanel kondisi_ruang;
+    private javax.swing.JPanel lampu_ruang;
+    static javax.swing.JPanel lingkungan_ruang;
+    private javax.swing.JRadioButton rbtnbisa_login;
+    private javax.swing.JRadioButton rbtnkeamanan1;
+    private javax.swing.JRadioButton rbtnkeamanan2;
+    private javax.swing.JRadioButton rbtnkeamanan3;
+    private javax.swing.JRadioButton rbtnkeamanan4;
+    private javax.swing.JRadioButton rbtnkebersihan1;
+    private javax.swing.JRadioButton rbtnkebersihan2;
+    private javax.swing.JRadioButton rbtnkenyamanan1;
+    private javax.swing.JRadioButton rbtnkenyamanan10;
+    private javax.swing.JRadioButton rbtnkenyamanan2;
+    private javax.swing.JRadioButton rbtnkenyamanan3;
+    private javax.swing.JRadioButton rbtnkenyamanan4;
+    private javax.swing.JRadioButton rbtnkenyamanan5;
+    private javax.swing.JRadioButton rbtnkenyamanan6;
+    private javax.swing.JRadioButton rbtnkenyamanan7;
+    private javax.swing.JRadioButton rbtnkenyamanan8;
+    private javax.swing.JRadioButton rbtnkenyamanan9;
+    private javax.swing.JRadioButton rbtnlingkungan1;
+    private javax.swing.JRadioButton rbtnlingkungan10;
+    private javax.swing.JRadioButton rbtnlingkungan11;
+    private javax.swing.JRadioButton rbtnlingkungan12;
+    private javax.swing.JRadioButton rbtnlingkungan13;
+    private javax.swing.JRadioButton rbtnlingkungan14;
+    private javax.swing.JRadioButton rbtnlingkungan15;
+    private javax.swing.JRadioButton rbtnlingkungan16;
+    private javax.swing.JRadioButton rbtnlingkungan17;
+    private javax.swing.JRadioButton rbtnlingkungan18;
+    private javax.swing.JRadioButton rbtnlingkungan2;
+    private javax.swing.JRadioButton rbtnlingkungan3;
+    private javax.swing.JRadioButton rbtnlingkungan4;
+    private javax.swing.JRadioButton rbtnlingkungan5;
+    private javax.swing.JRadioButton rbtnlingkungan6;
+    private javax.swing.JRadioButton rbtnlingkungan7;
+    private javax.swing.JRadioButton rbtnlingkungan8;
+    private javax.swing.JRadioButton rbtnlingkungan9;
+    private javax.swing.JRadioButton rbtntdkbisa_login;
+    private javax.swing.JSlider s_kelembapan;
+    private javax.swing.JSlider s_nilaipencahayaan;
+    private javax.swing.JSlider s_suhu;
+    private javax.swing.JPanel sarana;
+    static javax.swing.JPanel sarana_ruang;
+    private javax.swing.JPanel steker_ruang;
+    private javax.swing.JTable tbldata;
+    private javax.swing.JTextField txtbahaya;
+    private javax.swing.JTextField txtbau;
+    private javax.swing.JTextField txtjmlAC;
+    private javax.swing.JTextField txtjmlCCTV;
+    private javax.swing.JTextField txtjmlLCD;
+    private javax.swing.JTextField txtjmljendela;
+    private javax.swing.JTextField txtjmlkipas;
+    private javax.swing.JTextField txtjmlkondisiAC;
+    private javax.swing.JTextField txtjmlkondisiCCTV;
+    private javax.swing.JTextField txtjmlkondisiLCD;
+    private javax.swing.JTextField txtjmlkondisikipas;
+    private javax.swing.JTextField txtjmlkondisilampu;
+    private javax.swing.JTextField txtjmlkondisisteker;
+    private javax.swing.JTextField txtjmlkursi;
+    private javax.swing.JTextField txtjmllampu;
+    private javax.swing.JTextField txtjmlpintu;
+    private javax.swing.JTextField txtjmlsteker;
+    private javax.swing.JTextField txtkeausan;
+    private javax.swing.JTextField txtkebisingan;
+    private javax.swing.JTextField txtkebocoran;
+    private javax.swing.JTextField txtkekokohan;
+    private javax.swing.JTextField txtkelembapan;
+    private javax.swing.JTextField txtkerusakan;
+    private javax.swing.JTextField txtkondisiatap;
+    private javax.swing.JTextField txtkondisidinding;
+    private javax.swing.JTextField txtkondisijendela;
+    private javax.swing.JTextField txtkondisikaca;
+    private javax.swing.JTextField txtkondisilantai;
+    private javax.swing.JTextField txtkondisipintu;
+    private javax.swing.JTextField txtkuncijendela;
+    private javax.swing.JTextField txtkuncipintu;
+    private javax.swing.JTextField txtlebar;
+    private javax.swing.JTextField txtlogin;
+    private javax.swing.JTextField txtlokasi;
+    private javax.swing.JTextField txtnama;
+    private javax.swing.JTextField txtnilaipencahayaan;
+    private javax.swing.JTextField txtpanjang;
+    private javax.swing.JTextField txtposisiAC;
+    private javax.swing.JTextField txtposisiCCTV;
+    private javax.swing.JTextField txtposisiLCD;
+    private javax.swing.JTextField txtposisikipas;
+    private javax.swing.JTextField txtposisilampu;
+    private javax.swing.JTextField txtposisisteker;
+    private javax.swing.JTextField txtsirkulasiudara;
+    private javax.swing.JTextField txtsuhu;
+    // End of variables declaration                   
+
+}
