@@ -1,23 +1,17 @@
-package Inventaris;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
+package inventaris_form;
 
+/**
+ *
+ * @author Nuke Brilian
+ */
 public class Tampil {
-	public static void main(String[] args){
-		IO call1 = new IO();
-		
-		System.out.println("==============================================================");
-		System.out.println("                      INVENTARIS KAMPUS");
-		System.out.println("==============================================================");
-		call1.identitas_ruang_kelas();
-		call1.kondisi_ruang();
-		call1.jumlah_kondisi_dan_posisi_sarana();
-		call1.lingkungan_ruang_kelas();
-		call1.kebersihan_ruang_kelas();
-		call1.kenyamanan_ruang_kelas();
-		call1.keamanan_ruang_kelas();
-		
-		System.out.println("\n========================HASIL ANALISIS========================");
-		call1.tampil();
-		System.out.println("==============================================================");
-	}
+    public static void main(String [] args){
+        new LoginUser().setVisible(true);
+    }
 }
